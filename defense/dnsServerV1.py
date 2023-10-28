@@ -8,7 +8,7 @@ import dnslib
 # Config
 
 dns_server_ip = ''
-dns_server_port = 5053
+dns_server_port = 53
 min_packet_size = 512
 
 domain = 'dummy-site-for-dns-ddos-testing.com.'
