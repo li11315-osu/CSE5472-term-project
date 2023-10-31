@@ -1,0 +1,16 @@
+$ORIGIN dummy-site-for-dns-ddos-testing.com.
+$TTL 0
+
+@ 	IN 	SOA 	ns1.dummy-site-for-dns-ddos-testing.com. dummy-site-for-dns-ddos-testing.com. (
+			1 ; serial
+			0 ; refresh
+			0 ; retry
+			0 ; expire
+			0 ) ; negative caching ttl
+	IN 	NS 	ns1.dummy-site-for-dns-ddos-testing.com.
+	IN 	NS 	ns2.dummy-site-for-dns-ddos-testing.com.
+	IN 	A 	45.74.34.221
+ns1 	IN 	A 	45.74.34.221
+ns2 	IN 	A 	45.74.34.221
+www 	IN 	A 	45.74.34.221
+

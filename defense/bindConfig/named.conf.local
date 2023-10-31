@@ -1,0 +1,7 @@
+// Add authoritative zone for our domain
+zone "dummy-site-for-dns-ddos-testing.com" {
+	type primary;
+	file "/etc/bind/zonefile";
+	notify yes;
+};
+
