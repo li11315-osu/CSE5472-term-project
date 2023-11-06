@@ -14,9 +14,13 @@ This repository contains the code artifacts, documentation, and instructions nee
 
 - **Defense**
 
-    - The code and configuration information needed for self-hosting an authoritative DNS server, which we made internet-accessible through the registration of a domain name and a static IP address in order to fully reflect the behavior of regular real-world nameservers. The external setup steps do not involve any of our own code artifacts, but instructions are included in this README to allow their replication. 
+    - The code and configuration information needed for self-hosting an authoritative DNS server, which we made internet-accessible through the registration of a domain name and a static IP address in order to fully reflect the behavior of regular real-world nameservers. The external setup steps do not involve any of our own code artifacts, but instructions are included in this README to allow their replication. We used three different DNS server implementations in order to maximize our flexibility in implementing countermeasures and also examine differences in behavior and natural defensive capabilities:
 
-    - A one-line script to self-host a web server for which our DNS server resolves the domain name into the corresponding IP address. When btoh servers are running, any internet user can access our dummy website by looking up the domain name, representing arguably the most simple and common use case for DNS.
+        - A manual implementation consisting of a Python program that listens on port 53 and responds to DNS packets
+        - [dnsmasq](https://thekelleys.org.uk/dnsmasq/doc.html), a simple, lightweight DNS server software designed for small networks
+        - [BIND](https://www.isc.org/bind/), the most commonly used DNS server software in real-world systems
+
+    - A one-line script to self-host a web server for which our DNS server resolves the domain name into the corresponding IP address. When btoh servers are running, any internet user can access our dummy website by looking up the domain name, representing arguably the most simple and common use case for DNS. This is only included for illustrative purposes and to help verify that our DNS server works.
 
     - The countermeasures we implemented to prevent our attacks from disrupting the functionality of our servers. Each of these are described in detail later in this README.
 
@@ -26,13 +30,13 @@ This repository contains the code artifacts, documentation, and instructions nee
 
 - **Evaluation**
 
-    - Programs to quantify the functionality of our server setup and the effects of our attacks and countermeasures on it by simulating "normal" server traffic coming from spoofed users attempting to access the site through its domain name, with measurements taken for the speed and success status of each user's request sequence. Sample results are shown later in this README alongside the attacks and countermeasures that produced them.
+    - Programs to quantify the functionality of our server setup and the effects of our attacks and countermeasures on it by simulating "normal" server traffic coming from spoofed users attempting to access the site through its domain name, with measurements taken for the speed and success status of each user's request. Sample results are shown later in this README alongside the attacks and countermeasures that produced them.
 
     - Programs to process and visualize the raw measurements
 
 We tried to make the code artifacts as modular and interchangeable as possible to make this work extensible. All that is necessary for the attack and evaluation programs to run is for the DNS server and web server to be running and to be accessible through the chosen domain name using public internet-based DNS resolution. Granted, the registered domain name and static IP needed for consistent internet accessibility both involve small monthly fees, though we considered that to be worth it for the improved convenience and realisticness.
 
-In the next section, we will briefly discuss of the background and general real-world relevance of DNS denial-of-service threats, after which we will move on to the detailed instructions for properly configuring and running our setup with full internet accessibility and for executing the programs present in this repository. The bulk of this README will discuss the attacks and corresponding countermeasures that we implemented, with analysis of their measured effectiveness and their real-world applicability and prevalence. The closing sections will discuss our overall takeaways and insights from this work, the extent of its usefulness in the real world, and potential improvements and expansions.
+In the next section, we will briefly discuss of the background and general real-world relevance of DNS denial-of-service threats, after which we will move on to the detailed instructions for properly configuring and running our setup with full internet accessibility and for executing the programs present in this repository. The bulk of this README will discuss the attacks and corresponding countermeasures that we implemented, with analysis of their measured effectiveness and their real-world applicability. The closing sections will discuss our overall takeaways and insights from this work, the extent of its usefulness in the real world, and potential improvements and expansions.
 
 
 ## Table of Contents
@@ -87,7 +91,7 @@ With the way DNS is structured, there's generally [four different types](https:/
 - The **top-level domain (TLD) nameservers** represent the first subdivision of the hierarchy, with each one maintaining information about the domain names that share its domain extension (e.g. .com, .org, .net). The root servers refer the resolvers to the TLD servers, which in turn refer the resolvers to the next level down.
 - Lastly, the **authoritative nameservers** are the ones which can provide the actual mapping from the requested domain name to the corresponding IP address. The same information may be floating around elsewhere in caches, but the authoritative servers are the official source of truth, hence the name. To be accessible to the Internet, a domain name needs served by at least one of these (particularly one that's registered with the corresponding TLD server), with most having multiple for better resiliency.
 
-From the attacker's perspective, taking down a resolver could cut off a user's ability to use the web, but anyone at least small amount of tech-savviness can simply select a different one in their network settings. Resolvers mostly all perform the same function, and there's well-known publicly available options like Cloudflare's 1.1.1.1 and Google's 8.8.8.8 that are nearly impossible to take down because of how powerful and resilient the underlying infrastructure is. Root servers and TLD servers are similarly daunting targets, as they too involve large numbers of redundant instances maintained by various well-funded and well-prepared organizations, and the scope of the service they provide is much wider than what most are interested in targeting anyway.
+From the attacker's perspective, taking down a resolver could cut off a user's ability to use the web, but anyone with at least small amount of tech-savviness can simply select a different one in their network settings. Resolvers mostly all perform the same function, and there's well-known publicly available options like Cloudflare's 1.1.1.1 and Google's 8.8.8.8 that are nearly impossible to take down because of how powerful and resilient the underlying infrastructure is. Root servers and TLD servers are similarly daunting targets, as they too involve large numbers of redundant instances maintained by various well-funded and well-prepared organizations, and the scope of the service they provide is much wider than what most are interested in targeting anyway.
 
 This leaves the authoritative servers as the preferred target. These tend to be run by smaller organizations, and in some cases may be hosted on-premise by the same people who own the domain name and corresponding website. Unlike with the other server types, each instance or handful of instances has unique functionality in being the only ones to provide definitive records for certain domains, and taking them down will make the corresponding resources inaccessible for any user who doesn't either have access to a cached record (which generally expires after a short while) or somehow know the IP address. Even when there's redundancy, it can only do so much if all of the servers for the given domain are similarly weak.
 
@@ -140,3 +144,4 @@ Ultimately, with these attacks having been largely reduced to a game of brute fo
 - [PureVPN](purevpn.com)
 - [dnsmasq](https://thekelleys.org.uk/dnsmasq/doc.html)
 - [BIND](https://www.isc.org/bind/)
+- [Trickest's list of trusted public DNS resolvers](https://github.com/trickest/resolvers/blob/main/resolvers-trusted.txt)]
