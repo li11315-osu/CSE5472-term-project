@@ -1,0 +1,722 @@
+[
+    {
+        "index": 0,
+        "resolver": "1.0.0.1",
+        "start_time": 0,
+        "end_time": 5431,
+        "response_time": 5431,
+        "success": true
+    },
+    {
+        "index": 1,
+        "resolver": "1.1.1.1",
+        "start_time": 104,
+        "end_time": 13237,
+        "response_time": 13133,
+        "success": true
+    },
+    {
+        "index": 2,
+        "resolver": "134.195.4.2",
+        "start_time": 209,
+        "end_time": 11270,
+        "response_time": 11061,
+        "success": true
+    },
+    {
+        "index": 3,
+        "resolver": "149.112.112.112",
+        "start_time": 312,
+        "end_time": 7145,
+        "response_time": 6833,
+        "success": true
+    },
+    {
+        "index": 4,
+        "resolver": "185.228.168.9",
+        "start_time": 417,
+        "end_time": 7165,
+        "response_time": 6748,
+        "success": true
+    },
+    {
+        "index": 5,
+        "resolver": "185.228.169.9",
+        "start_time": 520,
+        "end_time": 2776,
+        "response_time": 2256,
+        "success": true
+    },
+    {
+        "index": 6,
+        "resolver": "195.46.39.39",
+        "start_time": 626,
+        "end_time": 15646,
+        "response_time": 15020,
+        "success": false
+    },
+    {
+        "index": 7,
+        "resolver": "195.46.39.40",
+        "start_time": 729,
+        "end_time": 15748,
+        "response_time": 15019,
+        "success": false
+    },
+    {
+        "index": 8,
+        "resolver": "205.171.2.65",
+        "start_time": 832,
+        "end_time": 8711,
+        "response_time": 7879,
+        "success": true
+    },
+    {
+        "index": 9,
+        "resolver": "205.171.3.65",
+        "start_time": 936,
+        "end_time": 15955,
+        "response_time": 15019,
+        "success": false
+    },
+    {
+        "index": 10,
+        "resolver": "208.67.220.220",
+        "start_time": 1038,
+        "end_time": 16053,
+        "response_time": 15015,
+        "success": false
+    },
+    {
+        "index": 11,
+        "resolver": "208.67.222.222",
+        "start_time": 1143,
+        "end_time": 16160,
+        "response_time": 15017,
+        "success": false
+    },
+    {
+        "index": 12,
+        "resolver": "216.146.35.35",
+        "start_time": 1245,
+        "end_time": 16260,
+        "response_time": 15015,
+        "success": false
+    },
+    {
+        "index": 13,
+        "resolver": "216.146.36.36",
+        "start_time": 1350,
+        "end_time": 16365,
+        "response_time": 15015,
+        "success": false
+    },
+    {
+        "index": 14,
+        "resolver": "64.6.64.6",
+        "start_time": 1453,
+        "end_time": 16472,
+        "response_time": 15019,
+        "success": false
+    },
+    {
+        "index": 15,
+        "resolver": "64.6.65.6",
+        "start_time": 1557,
+        "end_time": 16571,
+        "response_time": 15014,
+        "success": false
+    },
+    {
+        "index": 16,
+        "resolver": "74.82.42.42",
+        "start_time": 1662,
+        "end_time": 4884,
+        "response_time": 3222,
+        "success": true
+    },
+    {
+        "index": 17,
+        "resolver": "76.223.122.150",
+        "start_time": 1769,
+        "end_time": 3269,
+        "response_time": 1500,
+        "success": true
+    },
+    {
+        "index": 18,
+        "resolver": "76.76.10.0",
+        "start_time": 1870,
+        "end_time": 9657,
+        "response_time": 7787,
+        "success": true
+    },
+    {
+        "index": 19,
+        "resolver": "76.76.19.19",
+        "start_time": 1974,
+        "end_time": 7281,
+        "response_time": 5307,
+        "success": true
+    },
+    {
+        "index": 20,
+        "resolver": "76.76.2.0",
+        "start_time": 2077,
+        "end_time": 9657,
+        "response_time": 7580,
+        "success": true
+    },
+    {
+        "index": 21,
+        "resolver": "8.20.247.20",
+        "start_time": 2178,
+        "end_time": 17189,
+        "response_time": 15011,
+        "success": false
+    },
+    {
+        "index": 22,
+        "resolver": "8.26.56.26",
+        "start_time": 2280,
+        "end_time": 17297,
+        "response_time": 15017,
+        "success": false
+    },
+    {
+        "index": 23,
+        "resolver": "8.8.4.4",
+        "start_time": 2386,
+        "end_time": 5325,
+        "response_time": 2939,
+        "success": true
+    },
+    {
+        "index": 24,
+        "resolver": "8.8.8.8",
+        "start_time": 2487,
+        "end_time": 10646,
+        "response_time": 8159,
+        "success": true
+    },
+    {
+        "index": 25,
+        "resolver": "84.200.69.80",
+        "start_time": 2592,
+        "end_time": 17611,
+        "response_time": 15019,
+        "success": false
+    },
+    {
+        "index": 26,
+        "resolver": "84.200.70.40",
+        "start_time": 2693,
+        "end_time": 17711,
+        "response_time": 15018,
+        "success": false
+    },
+    {
+        "index": 27,
+        "resolver": "9.9.9.9",
+        "start_time": 2794,
+        "end_time": 4856,
+        "response_time": 2062,
+        "success": true
+    },
+    {
+        "index": 28,
+        "resolver": "94.140.14.14",
+        "start_time": 2898,
+        "end_time": 17918,
+        "response_time": 15020,
+        "success": false
+    },
+    {
+        "index": 29,
+        "resolver": "94.140.15.15",
+        "start_time": 3000,
+        "end_time": 18018,
+        "response_time": 15018,
+        "success": false
+    },
+    {
+        "index": 30,
+        "resolver": "1.0.0.1",
+        "start_time": 3106,
+        "end_time": 18123,
+        "response_time": 15017,
+        "success": false
+    },
+    {
+        "index": 31,
+        "resolver": "1.1.1.1",
+        "start_time": 3211,
+        "end_time": 18230,
+        "response_time": 15019,
+        "success": false
+    },
+    {
+        "index": 32,
+        "resolver": "134.195.4.2",
+        "start_time": 3314,
+        "end_time": 18333,
+        "response_time": 15019,
+        "success": false
+    },
+    {
+        "index": 33,
+        "resolver": "149.112.112.112",
+        "start_time": 3419,
+        "end_time": 14640,
+        "response_time": 11221,
+        "success": true
+    },
+    {
+        "index": 34,
+        "resolver": "185.228.168.9",
+        "start_time": 3524,
+        "end_time": 9157,
+        "response_time": 5633,
+        "success": true
+    },
+    {
+        "index": 35,
+        "resolver": "185.228.169.9",
+        "start_time": 3624,
+        "end_time": 18638,
+        "response_time": 15014,
+        "success": false
+    },
+    {
+        "index": 36,
+        "resolver": "195.46.39.39",
+        "start_time": 3728,
+        "end_time": 18737,
+        "response_time": 15009,
+        "success": false
+    },
+    {
+        "index": 37,
+        "resolver": "195.46.39.40",
+        "start_time": 3832,
+        "end_time": 18846,
+        "response_time": 15014,
+        "success": false
+    },
+    {
+        "index": 38,
+        "resolver": "205.171.2.65",
+        "start_time": 3936,
+        "end_time": 18950,
+        "response_time": 15014,
+        "success": false
+    },
+    {
+        "index": 39,
+        "resolver": "205.171.3.65",
+        "start_time": 4036,
+        "end_time": 19050,
+        "response_time": 15014,
+        "success": false
+    },
+    {
+        "index": 40,
+        "resolver": "208.67.220.220",
+        "start_time": 4141,
+        "end_time": 19157,
+        "response_time": 15016,
+        "success": false
+    },
+    {
+        "index": 41,
+        "resolver": "208.67.222.222",
+        "start_time": 4246,
+        "end_time": 19265,
+        "response_time": 15019,
+        "success": false
+    },
+    {
+        "index": 42,
+        "resolver": "216.146.35.35",
+        "start_time": 4350,
+        "end_time": 19365,
+        "response_time": 15015,
+        "success": false
+    },
+    {
+        "index": 43,
+        "resolver": "216.146.36.36",
+        "start_time": 4453,
+        "end_time": 19472,
+        "response_time": 15019,
+        "success": false
+    },
+    {
+        "index": 44,
+        "resolver": "64.6.64.6",
+        "start_time": 4557,
+        "end_time": 19574,
+        "response_time": 15017,
+        "success": false
+    },
+    {
+        "index": 45,
+        "resolver": "64.6.65.6",
+        "start_time": 4662,
+        "end_time": 19676,
+        "response_time": 15014,
+        "success": false
+    },
+    {
+        "index": 46,
+        "resolver": "74.82.42.42",
+        "start_time": 4766,
+        "end_time": 5119,
+        "response_time": 353,
+        "success": true
+    },
+    {
+        "index": 47,
+        "resolver": "76.223.122.150",
+        "start_time": 4870,
+        "end_time": 5325,
+        "response_time": 455,
+        "success": true
+    },
+    {
+        "index": 48,
+        "resolver": "76.76.10.0",
+        "start_time": 4973,
+        "end_time": 8711,
+        "response_time": 3738,
+        "success": true
+    },
+    {
+        "index": 49,
+        "resolver": "76.76.19.19",
+        "start_time": 5078,
+        "end_time": 5445,
+        "response_time": 367,
+        "success": true
+    },
+    {
+        "index": 50,
+        "resolver": "76.76.2.0",
+        "start_time": 5184,
+        "end_time": 11253,
+        "response_time": 6069,
+        "success": true
+    },
+    {
+        "index": 51,
+        "resolver": "8.20.247.20",
+        "start_time": 5286,
+        "end_time": 16378,
+        "response_time": 11092,
+        "success": true
+    },
+    {
+        "index": 52,
+        "resolver": "8.26.56.26",
+        "start_time": 5386,
+        "end_time": 20400,
+        "response_time": 15014,
+        "success": false
+    },
+    {
+        "index": 53,
+        "resolver": "8.8.4.4",
+        "start_time": 5491,
+        "end_time": 7807,
+        "response_time": 2316,
+        "success": true
+    },
+    {
+        "index": 54,
+        "resolver": "8.8.8.8",
+        "start_time": 5595,
+        "end_time": 7808,
+        "response_time": 2213,
+        "success": true
+    },
+    {
+        "index": 55,
+        "resolver": "84.200.69.80",
+        "start_time": 5700,
+        "end_time": 20713,
+        "response_time": 15013,
+        "success": false
+    },
+    {
+        "index": 56,
+        "resolver": "84.200.70.40",
+        "start_time": 5800,
+        "end_time": 20818,
+        "response_time": 15018,
+        "success": false
+    },
+    {
+        "index": 57,
+        "resolver": "9.9.9.9",
+        "start_time": 5901,
+        "end_time": 7239,
+        "response_time": 1338,
+        "success": true
+    },
+    {
+        "index": 58,
+        "resolver": "94.140.14.14",
+        "start_time": 6007,
+        "end_time": 21026,
+        "response_time": 15019,
+        "success": false
+    },
+    {
+        "index": 59,
+        "resolver": "94.140.15.15",
+        "start_time": 6112,
+        "end_time": 16179,
+        "response_time": 10067,
+        "success": true
+    },
+    {
+        "index": 60,
+        "resolver": "1.0.0.1",
+        "start_time": 6212,
+        "end_time": 19379,
+        "response_time": 13167,
+        "success": true
+    },
+    {
+        "index": 61,
+        "resolver": "1.1.1.1",
+        "start_time": 6317,
+        "end_time": 13317,
+        "response_time": 7000,
+        "success": true
+    },
+    {
+        "index": 62,
+        "resolver": "134.195.4.2",
+        "start_time": 6421,
+        "end_time": 11270,
+        "response_time": 4849,
+        "success": true
+    },
+    {
+        "index": 63,
+        "resolver": "149.112.112.112",
+        "start_time": 6526,
+        "end_time": 7239,
+        "response_time": 713,
+        "success": true
+    },
+    {
+        "index": 64,
+        "resolver": "185.228.168.9",
+        "start_time": 6626,
+        "end_time": 9641,
+        "response_time": 3015,
+        "success": true
+    },
+    {
+        "index": 65,
+        "resolver": "185.228.169.9",
+        "start_time": 6731,
+        "end_time": 13027,
+        "response_time": 6296,
+        "success": true
+    },
+    {
+        "index": 66,
+        "resolver": "195.46.39.39",
+        "start_time": 6836,
+        "end_time": 21854,
+        "response_time": 15018,
+        "success": false
+    },
+    {
+        "index": 67,
+        "resolver": "195.46.39.40",
+        "start_time": 6937,
+        "end_time": 21953,
+        "response_time": 15016,
+        "success": false
+    },
+    {
+        "index": 68,
+        "resolver": "205.171.2.65",
+        "start_time": 7038,
+        "end_time": 8712,
+        "response_time": 1674,
+        "success": true
+    },
+    {
+        "index": 69,
+        "resolver": "205.171.3.65",
+        "start_time": 7142,
+        "end_time": 22159,
+        "response_time": 15017,
+        "success": false
+    },
+    {
+        "index": 70,
+        "resolver": "208.67.220.220",
+        "start_time": 7245,
+        "end_time": 22260,
+        "response_time": 15015,
+        "success": false
+    },
+    {
+        "index": 71,
+        "resolver": "208.67.222.222",
+        "start_time": 7350,
+        "end_time": 22366,
+        "response_time": 15016,
+        "success": false
+    },
+    {
+        "index": 72,
+        "resolver": "216.146.35.35",
+        "start_time": 7453,
+        "end_time": 22471,
+        "response_time": 15018,
+        "success": false
+    },
+    {
+        "index": 73,
+        "resolver": "216.146.36.36",
+        "start_time": 7557,
+        "end_time": 22574,
+        "response_time": 15017,
+        "success": false
+    },
+    {
+        "index": 74,
+        "resolver": "64.6.64.6",
+        "start_time": 7662,
+        "end_time": 20640,
+        "response_time": 12978,
+        "success": true
+    },
+    {
+        "index": 75,
+        "resolver": "64.6.65.6",
+        "start_time": 7763,
+        "end_time": 22774,
+        "response_time": 15011,
+        "success": false
+    },
+    {
+        "index": 76,
+        "resolver": "74.82.42.42",
+        "start_time": 7864,
+        "end_time": 13988,
+        "response_time": 6124,
+        "success": true
+    },
+    {
+        "index": 77,
+        "resolver": "76.223.122.150",
+        "start_time": 7969,
+        "end_time": 8556,
+        "response_time": 587,
+        "success": true
+    },
+    {
+        "index": 78,
+        "resolver": "76.76.10.0",
+        "start_time": 8070,
+        "end_time": 8691,
+        "response_time": 621,
+        "success": true
+    },
+    {
+        "index": 79,
+        "resolver": "76.76.19.19",
+        "start_time": 8173,
+        "end_time": 8790,
+        "response_time": 617,
+        "success": true
+    },
+    {
+        "index": 80,
+        "resolver": "76.76.2.0",
+        "start_time": 8275,
+        "end_time": 23287,
+        "response_time": 15012,
+        "success": false
+    },
+    {
+        "index": 81,
+        "resolver": "8.20.247.20",
+        "start_time": 8379,
+        "end_time": 19354,
+        "response_time": 10975,
+        "success": true
+    },
+    {
+        "index": 82,
+        "resolver": "8.26.56.26",
+        "start_time": 8479,
+        "end_time": 19512,
+        "response_time": 11033,
+        "success": true
+    },
+    {
+        "index": 83,
+        "resolver": "8.8.4.4",
+        "start_time": 8580,
+        "end_time": 11824,
+        "response_time": 3244,
+        "success": true
+    },
+    {
+        "index": 84,
+        "resolver": "8.8.8.8",
+        "start_time": 8683,
+        "end_time": 23702,
+        "response_time": 15019,
+        "success": false
+    },
+    {
+        "index": 85,
+        "resolver": "84.200.69.80",
+        "start_time": 8787,
+        "end_time": 23798,
+        "response_time": 15011,
+        "success": false
+    },
+    {
+        "index": 86,
+        "resolver": "84.200.70.40",
+        "start_time": 8890,
+        "end_time": 23908,
+        "response_time": 15018,
+        "success": false
+    },
+    {
+        "index": 87,
+        "resolver": "9.9.9.9",
+        "start_time": 8995,
+        "end_time": 9757,
+        "response_time": 762,
+        "success": true
+    },
+    {
+        "index": 88,
+        "resolver": "94.140.14.14",
+        "start_time": 9096,
+        "end_time": 24110,
+        "response_time": 15014,
+        "success": false
+    },
+    {
+        "index": 89,
+        "resolver": "94.140.15.15",
+        "start_time": 9197,
+        "end_time": 24217,
+        "response_time": 15020,
+        "success": false
+    }
+]

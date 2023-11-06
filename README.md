@@ -32,6 +32,8 @@ This repository contains the code artifacts, documentation, and instructions nee
 
     - Programs to quantify the functionality of our server setup and the effects of our attacks and countermeasures on it by simulating "normal" server traffic coming from spoofed users attempting to access the site through its domain name, with measurements taken for the speed and success status of each user's request. Sample results are shown later in this README alongside the attacks and countermeasures that produced them.
 
+    - The collected results for each trial we performed
+
     - Programs to process and visualize the raw measurements
 
 We tried to make the code artifacts as modular and interchangeable as possible to make this work extensible. All that is necessary for the attack and evaluation programs to run is for the DNS server and web server to be running and to be accessible through the chosen domain name using public internet-based DNS resolution. Granted, the registered domain name and static IP needed for consistent internet accessibility both involve small monthly fees, though we considered that to be worth it for the improved convenience and realisticness.

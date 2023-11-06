@@ -1,0 +1,17 @@
+Setup:
+- All programs running in Thomas's laptop, connected to the internet through his phone's cellular hotspot
+- DNS server running inside Ubuntu VM, connected to PureVPN with static IP
+- DNS caching disabled for simplicity
+- Attacks running outside of VM on macOS host
+- Evaluation running outside of VM on macOS host
+- For measuring attacks, the evaluation program was started about 10 seconds after the attack was started
+- Evaluation queries involved list of 30 trusted resolvers, cycled through three times with 100ms between queries
+
+Additional results:
+- The attack volume for the direct flood averaged out to 80K packets per second for the measurements on the python server and 85K packets per second for the measurements on the BIND server
+
+Caveats:
+- As of this writing, it's not clear whether the resulting denial of service was caused by the server process being overloaded or the network being overloaded
+- For the latter case, the fact that attack traffic and evaluation traffic were originating from the same host would have significantly impacted the results
+- The lack of caching and usage of only trusted public resolvers for "normal" traffic are both simplifications from real-world conditions, where records are often cached for long periods of time and most queries come from the default DNS resolver provided by one's ISP
+
