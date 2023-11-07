@@ -4,11 +4,13 @@ Setup:
 - DNS caching disabled for simplicity
 - Attacks running outside of VM on macOS host
 - Evaluation running outside of VM on macOS host
-- For measuring attacks, the evaluation program was started about 10 seconds after the attack was started
+- For most of the attack measurements, the evaluation program was started about 10 seconds after the attack was started
+- For the attack results labelled "delayed start", the attacks were started a few seconds after the evaluation (slightly different each time - we might add precise timing later)
 - Evaluation queries involved list of 30 trusted resolvers, cycled through three times with 100ms between queries
 
 Additional results:
-- The attack volume for the direct flood averaged out to 80K packets per second for the measurements on the python server and 85K packets per second for the measurements on the BIND server
+- The attack volume for the direct flood averaged out to 80K packets sent per second for the measurements on the Python server and 85K packets per second for the measurements on the BIND server
+- The attack volume for the DNS laundering consistently averaged out to around 45K packets sent per second
 
 Caveats:
 - As of this writing, it's not clear whether the resulting denial of service was caused by the server process being overloaded or the network being overloaded

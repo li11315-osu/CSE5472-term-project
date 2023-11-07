@@ -146,4 +146,5 @@ Ultimately, with these attacks having been largely reduced to a game of brute fo
 - [PureVPN](purevpn.com)
 - [dnsmasq](https://thekelleys.org.uk/dnsmasq/doc.html)
 - [BIND](https://www.isc.org/bind/)
-- [Trickest's list of trusted public DNS resolvers](https://github.com/trickest/resolvers/blob/main/resolvers-trusted.txt)]
+- [Trickest's list of trusted public DNS resolvers](https://github.com/trickest/resolvers/blob/main/resolvers-trusted.txt)
+- [Trickest's full list of public DNS resolvers](https://github.com/trickest/resolvers/blob/main/resolvers.txt)
