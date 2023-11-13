@@ -20,7 +20,7 @@ This repository contains the code artifacts, documentation, and instructions nee
         - [dnsmasq](https://thekelleys.org.uk/dnsmasq/doc.html), a simple, lightweight DNS server software designed for small networks
         - [BIND](https://www.isc.org/bind/), the most commonly used DNS server software in real-world systems
 
-    - A one-line script to self-host a web server for which our DNS server resolves the domain name into the corresponding IP address. When btoh servers are running, any internet user can access our dummy website by looking up the domain name, representing arguably the most simple and common use case for DNS. This is only included for illustrative purposes and to help verify that our DNS server works.
+    - A one-line script to self-host a web server for which our DNS server resolves the domain name into the corresponding IP address. When both servers are running, any internet user can access our dummy website by looking up the domain name, representing arguably the most simple and common use case for DNS. This is only included for illustrative purposes and to help verify that our DNS server works.
 
     - The countermeasures we implemented to prevent our attacks from disrupting the functionality of our servers. Each of these are described in detail later in this README.
 
@@ -52,7 +52,11 @@ In the next section, we will briefly discuss of the background and general real-
     2. [Running the Servers](#running-the-servers)
     3. [Running the Attacks](#running-the-attacks)
     4. [Running the Evaluation](#running-the-evaluation)
-3. [Attacks and Countermeasures](#attacks-and-countermeasures)
+        1. [Data Collection](#data-collection)
+        2. [Analysis and Visualization](#analysis-and-visualization)
+    5. [Running the Countermeasures](#running-the-countermeasures)
+3. [Trials and Measurements](#trials-and-measurements)
+    1. [11/06/2023](#11062023)
 4. [Conclusions](#conclusions)
 5. [References](#references)
 
@@ -77,9 +81,12 @@ Denial of Service attacks take a much different approach. Instead of trying to d
 
 Articles published as recently as [this year](https://www.csoonline.com/article/646765/sophisticated-http-and-dns-ddos-attacks-on-the-rise.html) highlight denial of service, particularly distributed denial of service (DDoS) as a growing problem in general, with the latest wave of attackers starting to use cloud computing in their botnets to greatly expand their offensive capabilities. DDoS targeted directly towards web (HTTP/S) servers is perhaps the type most commonly thought of, but, according to CloudFlare's latest [DDoS threat report](https://blog.cloudflare.com/ddos-threat-report-2023-q3/), DNS is the most common attack vector among the remainder, with DNS Floods making up around 47% of recorded network-layer (i.e., excluding application-layer HTTP-based attacks) DDoS attacks in Q3 of 2023.
 
+![](https://blog.cloudflare.com/content/images/2023/10/pasted-image-0--19-.png)
+
 Discussions of DNS DDoS attacks typically divide them into two main categories:
 
 - [DNS Floods](https://www.cloudflare.com/learning/ddos/dns-flood-ddos-attack/), a type of symmetrical attack (meaning the attack volume is equal to the attacker's initial output capacity) in which the attacker simply overwhelms a DNS server with a very large volume of traffic.
+
 - [DNS Amplifications](https://www.cloudflare.com/learning/ddos/dns-amplification-ddos-attack/), an asymmetrical attack in which the attacker uses a DNS server to propagate the attack by sending it small request packets designed to trigger large responses which then get directed to the target through spoofed IPs in the request header. Even if the target doesn't directly process the responses, the traffic can still clog the surrounding network, cutting off access to it anyway.
 
 DNS amplifications may seem more clever and efficient, but once again it turns out that the cleverness makes the attack easier to mitigate in a capacity-independent manner. The reliance on spoofed IPs and the fact that the response traffic is being directed towards an entity that didn't request it raise visible red flags that network operators can use to categorically filter out the attacker's packets, and in the end only 2.5% of network-layer DDoS attacks were attributed to DNS amplification in Q3 2023. With DNS floods, though, the target is the one dealing with initial requests, which can be made to look almost indistinguishable from legitimate traffic. If the attacker can send enough, the defender is essentially helpless.
@@ -89,9 +96,14 @@ One may note that DNS floods sound about as basic and generic as you can get wit
 With the way DNS is structured, there's generally [four different types](https://www.cloudflare.com/learning/dns/dns-server-types/) of DNS server that each play very distinct roles:
 
 - The **resolvers** are the user's first point of contact whenever they need to look up a domain name. They take their requests and handle the process of querying other DNS servers to find and return the answers, which they may also cache afterwards
+
 - The **root nameservers** are, in turn, the resolver's first point of contact. DNS is organized hierarchically to provide a consistent way of searching through its otherwise decentralized structure, and the root servers sit at the top of the hierarchy, from which they can direct the resolvers to any other section of it.
+
 - The **top-level domain (TLD) nameservers** represent the first subdivision of the hierarchy, with each one maintaining information about the domain names that share its domain extension (e.g. .com, .org, .net). The root servers refer the resolvers to the TLD servers, which in turn refer the resolvers to the next level down.
+
 - Lastly, the **authoritative nameservers** are the ones which can provide the actual mapping from the requested domain name to the corresponding IP address. The same information may be floating around elsewhere in caches, but the authoritative servers are the official source of truth, hence the name. To be accessible to the Internet, a domain name needs served by at least one of these (particularly one that's registered with the corresponding TLD server), with most having multiple for better resiliency.
+
+![](https://www.cloudflare.com/img/learning/dns/dns-server-types/authoritative-nameserver.png)
 
 From the attacker's perspective, taking down a resolver could cut off a user's ability to use the web, but anyone with at least small amount of tech-savviness can simply select a different one in their network settings. Resolvers mostly all perform the same function, and there's well-known publicly available options like Cloudflare's 1.1.1.1 and Google's 8.8.8.8 that are nearly impossible to take down because of how powerful and resilient the underlying infrastructure is. Root servers and TLD servers are similarly daunting targets, as they too involve large numbers of redundant instances maintained by various well-funded and well-prepared organizations, and the scope of the service they provide is much wider than what most are interested in targeting anyway.
 
@@ -100,28 +112,151 @@ This leaves the authoritative servers as the preferred target. These tend to be 
 As for what would make flooding the authoritative DNS server different from targeting the corresponding web server, beyond the prospect of the DNS server being an easier target due to simply having less attention paid to it, a few things come to mind:
 
 - Since the DNS server typically gets contacted by the resolver rather than receiving queries directly from clients, defense based on IP address filtering is less practical since attackers can simply route their traffic through 1.1.1.1, 8.8.8.8, or other well-known legitimate resolvers, a tactic known as DNS laundering
+
 - On the flip side, the fact that resolvers cache responses is something that defenders can take advantage of to reduce traffic loads. The IP addresses of a site's servers are typically much less subject to change than the actual site contents are, so the DNS server can let cached records stay valid for longer without worrying about data getting stale
+
 - The list of valid records that a DNS server provides is typically very finite and enumerable, so intermediate firewalls could potentially be configured to drop packets that ask for anything else, counteracting attackers who try to get around caching by generating random invalid request. Of course, the firewall could also get overwhelmed, and if it takes more than a trivial amount of computation to distinguish between valid and invalid requests then it could be no better than simply having the server try to answer the request
 
-Ultimately, with these attacks having been largely reduced to a game of brute force, either side having enough of a resource advantage will allow them to always come out on top regardless how much their adversary tries to exploit the properties of the protocol. But with that said, the threshold for "enough" can be made more elusive if one plays their cards well. In this project, we try to quantify just how much of a difference it can make, if any, to try having your defenses work smarter when they can't work any harder.
+And therein lies the inherent problem with trying to counter denial-of-service: any packet that hits the defender's network will cause some level of strain on the defender's resources, be it from answering a legitimate request or trying to block or drop a suspicious one. In the end, these attacks can almost always be reduced to a game of brute force, where either side having enough of a resource advantage will allow them to come out on top regardless how much their adversary tries to exploit the properties of the protocol.
+
+But with that said, the threshold for "enough" can be made more elusive if one plays their cards well. In this project, we try to quantify just how much of a difference it can make, if any, to try having your defenses work smarter when they can't work any harder.
 
 
 ## Usage Instructions
 
 ### External Setup
 
+We wanted as much of a realistic setup as possible without running afoul of terms of service or cybercrime laws, so we decided we would self-host the actual server instance but would still make it accessible to public DNS resolvers. As we mentioned previously, doing the latter required us to buy a domain name so that we could register an authoritative DNS server for it, as well as a static IP address so that our server could be accessed in a consistent manner.
+
 #### Domain Name Registration
+
+DNS may be mostly decentralized, but everything that's Internet-accessible is still part of the same global hierarchy. People can't just go around adding nameservers for any arbitrary domain, or else no one would be able to host a site without someone else being able to make the URL redirect somewhere else. Systems are in place to allow people to establish ownership over domain names, with the ownership delegated by accredited companies called *registrars* that one can buy names from.
+
+Buying a domain name is fairly common action - anyone who wants to set up a public website needs to do it - so there's a wide range of registrars out there that all try to make the process quick and painless even for non-technical people. We went with **[Domain.com](domain.com)** for the cheap, no-frills package, registering `dummy-site-for-dns-ddos-testing.com` for one year for around $20. For anyone trying to reuse this work, any name and registrar should work just as well so long as the registrar lets you set custom nameservers.
 
 #### Static IP
 
+Now that we had the right to run the authoritative nameserver for our domain, we next needed to specify where the nameserver is actually located.
+
+Self-hosting means we'd just list our own IP address, but the problem with that is that the IP addresses on our devices are constantly changing. When we connect to a network, we get one assigned to us through Dynamic Host Configuration Protocol (DHCP), and we lose it if we disconnect or switch networks, or it might just expire and refresh after a while.
+
+Since changes to the public DNS registry take time to propogate, we can't just keep changing the listed address on-the-fly, and it's not like we'd want to do that, either, considering how inconvenient it'd be. Instead, we needed a static IP address - one that doesn't change.
+
+We decided that our best option for getting one of those was through a VPN, since it would also allow us to share the IP address by sharing the account. We went with **[PureVPN](purevpn.com)** since they allow port forwarding, which is what allows incoming traffic to actually interact with things running on the IP address. A one-year subscription with the Dedicated IP add-on costs about $100.
+
+Enabling port forwarding on the static IP is fairly easy. PureVPN has a settings panel that lets us just list the ports we want to enable, and all we had to do was type in "53, 80" (53 for DNS, 80 for web). From there, if you run PureVPN with the Dedicated IP connection then anything listening on those ports will be accessible at the address. Hooking the address up to the domain registrar was a bit more complicated.
+
+On the Domain.com control panel, the Private Nameservers tab in the DNS & Nameservers subpanel lets us register DNS servers that point to IP addresses that we specify. We listed `ns1.dummy-site-for-dns-ddos-testing.com` and `ns2.dummy-site-for-dns-ddos-testing.com` as both pointing to our static IP. The `ns2` may or may not have been needed, but we included it there just in case, since some registrars require redundant nameservers. 
+
+There's a switch that allows us use the private nameservers as our site's main nameservers, so that resolvers will be directed to them. When we tried flipping it, though, it kept telling us that our nameservers were invalid. We tried again after actually running a DNS server instance on the static IP, but it still gave us the same error. Some time later, we ended up getting it to work after going on the main Nameservers tab, clicking the Add Nameserver button, and listing the `ns1` and `ns2` domains. This is what it looked like in the end:
+
+![](https://cdn.discordapp.com/attachments/1019067030663598080/1173449843746803732/image.png?ex=6563ff54&is=65518a54&hm=b877b435b274b236c5c54632ca6ab757ea81ae99c0add90f077bbcab82f70079&)
+![](https://cdn.discordapp.com/attachments/1019067030663598080/1173449946192674896/image.png?ex=6563ff6c&is=65518a6c&hm=d150cd60fd0afc4fea7c7ab157afa4b73fc3beb95226c4481663da596345236e&)
+
 ### Running the Servers
+
+The server scripts and configurations are generally intended to work for Linux.
+
+We used a Ubuntu VM for the servers and had PureVPN running inside the VM, which had the added benefit of allowing attack and evaluation traffic from outside the VM to behave like it was coming from a different network even if everything was running on the physical same device.
+
+The `defense` directory contains everything needed for running both the servers and the countermeasures. We'll get to the latter later.
+
+The web server is the easy one and it's just there for illustrative purposes so we'll get it out of the way first. Just enter `sudo ./runWebServer.sh`, and it'll start listening on port 80. With the way the DNS servers are configured, the returned IP address for the website is the same static IP being used for hosting the DNS server itself, so the combined setup needs both servers to be running on the same host to work. When running the actual attacks and evaluation, the web server doesn't need to be running since none of the automated traffic interacts with ti.
+
+The manual Python implementation of the DNS server is located in `dnsServerV1.py`. Tweaks to the configuration can be done by changing parts of the code. Running the script on its own won't work since port 53 is normally occupied by another process on Linux, so I added a shell script that will free up the port (`free_port_53_linux.sh`), as well as another one that can undo those changes (`restore_port_53_linux.sh`) after you're done running the server. All of these will need to be run with `sudo` since the Python script needs priveliged access for port 53 and since the shell scripts mess with the `/etc/systemd` configuration. 
+
+To summarize the sequence:
+
+1. `sudo ./free_port_53_linux.sh`
+2. `sudo python3 dnsServerV1.py`
+3. (Do stuff with the server)
+4. (Ctrl+C to terminate the server)
+5. `sudo ./restore_port_53_linux.sh` (Optional)
+
+For the BIND DNS server, BIND can be installed onto Linux by typing `sudo apt get install bind9` into the terminal. With the software already implementing the server functionality, our own code artifacts just consist of the server configuration (located in the `bindConfig` subdirectory), a script to run a server instance using our config (`runBind.sh`), and a script to stop the running instance (`stopBind.sh` - the server runs in the background, so Ctrl+C won't work). Both of these scripts need to be run with `sudo` as well since they touch `/etc/bind` in order to copy our server's config files into it and later clean them out of it. For some reason, the script to free up port 53 doesn't need to be run for BIND, and it'll just claim the port on its own.
+
+To summarize the sequence:
+
+1. `sudo apt get install bind9` (Once)
+2. `sudo ./runBind.sh`
+3. (Do stuff with the server)
+4. `sudo ./stopBind.sh`
 
 ### Running the Attacks
 
+As we mentioned a few sections ago, DNS-based denial of service attacks include symmetrical DNS floods as well as asymmetrical DNS amplification attacks, but the former is much more widely used due to being both easier to implement and harder to counter. As thus, we limit our focus to them for this project.
+
+The `attack` directory contains the two variants we implemented, both as Python scripts:
+
+- `directFlood.py` finds the IP addresses of the site's nameservers (we only had one, but wanted to keep this generalizable) and proceeds to send as many DNS packets to them as possible.
+
+- `launderingFlood.py` sends queries to public DNS resolvers instead of directly contacting the authoritative nameservers, cycling through [a list](#https://github.com/trickest/resolvers/blob/main/resolvers.txt) of 30,000 that we found online and downloaded into the directory. To get around caching, it generates a random subdomain for each set of requests to ensure that each resolver has a cache miss.
+
+Either of these can be run by simply typing `python3 <filename>` into the terminal while the DNS server is running and is connected to the static IP. They won't terminate on their own, and will need to be stopped by pressing Ctrl+C. The final terminal printout for both will show the number and rate of packets sent, to help add context to other measurements.
+
+We caution that, given the deliberate lack of constraints on the rate at which packets are being sent, both of these scripts will generate a very large volume of network traffic, likely reaching several hundred MB within seconds. **These attacks should only be launched while both the attacking host and the server host are connected to personal networks or hotspots. Don't get yourself blacklisted or arrested for doing this to a public or organizational network.** If you go for the hotspot option, make sure you have an unlimited plan with your cellular provider so that this doesn't take up all your data.
+
+If the server setup is changed, the scripts only need to be changed if a different domain name is being used or, in the case of the direct flood, if different nameserver subdomains are being used.
+
 ### Running the Evaluation
 
+#### Data Collection
 
-## Attacks and Countermeasures
+The `evaluation` directory contains a Python script called `serverEval.py` that we use for generating our measurement data. It tries to gauge the performance and availability of our DNS server from the perspective of normal users by sending queries for our domain at controlled intervals and seeing how long it takes to get a response for each one, if the server responds at all.
+
+For simplicity and reliability in detecting responses, each query is done by calling the `dig` utility, as opposed to directly opening a new socket. By default, `dig` will time out after 15 seconds, a setting we left in place since it seemed like a reasonable threshold. Multithreading is used so that a new request can be sent before the previous ones receive responses, for a more realistic simulation of user traffic.
+
+To also simulate the fact that traffic will be coming from a range of sources (something that becomes a significant factor when caching is enabled) we directed the queries to various public resolvers, using [a shorter list](https://github.com/trickest/resolvers/blob/main/resolvers.txt) of 30 well-known, trusted ones to guarantee reliable responses in the absence of the attack taking place.
+
+Factors that can be adjusted in the code include: 
+
+- The domain name 
+- The interval between requests
+- The list of resolvers being used
+- The number of requests to make before terminating
+- The command-line arguments being given to `dig`.
+
+Running the script is about as simple as one would expect: `python3 serverEval.py`. The DNS server will need to be running and will need to be connected to the static IP in order for this to work properly, of course.
+
+After a response is received for the last request, the program will terminate and give a printout of the results in JSON as an array of objects, each with the following properties:
+
+- "index" (number) - Just the index of the given request, starting from 0. Redundant but helps with readability
+- "resolver" (string) - The IP address of the DNS resolver that the request was initial sent to
+- "start_time" (number) - The time at which the request was sent, relative to the start of the evaluation, given in milliseconds
+- "end_time" (number) - The time at which the response was received, relative to the start of the evaluation, given in milliseconds
+- "response_time" (number) - Equal to start_time - end_time, is redundant but helps with readability
+- "success" (boolean) - True if an actual response was received, false if `dig` timed out
+
+The JSON files in the `results` directory all contain data generated in this format.
+
+Eyeballing the JSON can be somewhat helpful - at the very least, one can tell the difference between a working server and a struggling or disabled one - but overall it's very verbose and can be tough for humans to parse, even with the redundant fields. Fortunately, it doesn't take much to extract macro-level insights and generate nice-looking charts.
+
+#### Analysis and Visualization
+
+### Running the Countermeasures
+
+
+## Trials and Measurements
+
+### 11/06/2023
+
+We ran our first tests right after writing the attacks, with no countermeasures in place. Everything was done on Thomas's laptop, with the server and VPN running inside a Ubuntu VM while the attack and evaluation scripts were running outside of it (yes, attack and evaluation traffic were coming from the same host here, something we changed on later trials). The device was connected to this internet through a cellular hotspot.
+
+The baseline measurements for the server implementations, with no attacks running, are shown below:
+
+TODO: Generate charts
+
+Next, we ran the direct flood on both implementations, waiting about 10 seconds between the start of the attack and the start of the evaluation. In both cases, the attack sent out around 80K packets per second. Its effects can be seen below:
+
+TODO: Generate charts
+
+Next we ran the DNS laundering attacks in the same manner. About 45K packets per second were sent out in both cases.
+
+TODO: Generate charts
+
+As a sanity check, we ran one more set of tests with the DNS laundering, in which we started the evaluation first and then started the attacks about a second later.
+
+TODO: Generate charts
 
 
 ## Conclusions
@@ -148,3 +283,4 @@ Ultimately, with these attacks having been largely reduced to a game of brute fo
 - [BIND](https://www.isc.org/bind/)
 - [Trickest's list of trusted public DNS resolvers](https://github.com/trickest/resolvers/blob/main/resolvers-trusted.txt)
 - [Trickest's full list of public DNS resolvers](https://github.com/trickest/resolvers/blob/main/resolvers.txt)
+- Fortinet: [DDoS Attack Mitigation Technologies Demystified](https://www.fortinet.com/content/dam/fortinet/assets/white-papers/DDoS-Attack-Mitigation-Demystified.pdf)
