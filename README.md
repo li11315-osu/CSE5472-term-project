@@ -8,7 +8,7 @@
 
 *Topic: DNS Security*
 
-In this project, we examine the level of threat posed by various forms of denial of service (DoS) and distributed denial of service (DDoS) attacks directed towards or propogated through Domain Name System (DNS) infrastructure, as well as the effectiveness and practicality of countermeasures that we attempted to deploy against them. 
+In this project, we examine the level of threat posed by denial of service (DoS) and distributed denial of service (DDoS) attacks directed towards Domain Name System (DNS) infrastructure, as well as the effectiveness and practicality of countermeasures that we attempted to deploy against them. 
 
 This repository contains the code artifacts, documentation, and instructions needed for running our experiments, with files organized into three categories:
 
@@ -30,15 +30,15 @@ This repository contains the code artifacts, documentation, and instructions nee
 
 - **Evaluation**
 
-    - Programs to quantify the functionality of our server setup and the effects of our attacks and countermeasures on it by simulating "normal" server traffic coming from spoofed users attempting to access the site through its domain name, with measurements taken for the speed and success status of each user's request. Sample results are shown later in this README alongside the attacks and countermeasures that produced them.
+    - Programs to quantify the functionality of our server setup and the effects of our attacks and countermeasures on it by simulating "normal" server traffic coming from spoofed users attempting to resolve the site's domain name, with measurements taken for the speed and success status of each user's request. Collected results from our trials are shown later in this README.
 
     - The collected results for each trial we performed
 
     - Programs to process and visualize the raw measurements
 
-We tried to make the code artifacts as modular and interchangeable as possible to make this work extensible. All that is necessary for the attack and evaluation programs to run is for the DNS server and web server to be running and to be accessible through the chosen domain name using public internet-based DNS resolution. Granted, the registered domain name and static IP needed for consistent internet accessibility both involve small monthly fees, though we considered that to be worth it for the improved convenience and realisticness.
+We tried to make the code as modular and interchangeable as possible to make this work extensible. All that is necessary for the attack and evaluation programs to run is for the DNS server and web server to be running and to be accessible through the chosen domain name using public internet-based DNS resolution. Granted, the registered domain name and static IP needed for consistent internet accessibility both involve small monthly fees, though we considered that to be worth it for the improved convenience and realisticness.
 
-In the next section, we will briefly discuss of the background and general real-world relevance of DNS denial-of-service threats, after which we will move on to the detailed instructions for properly configuring and running our setup with full internet accessibility and for executing the programs present in this repository. The bulk of this README will discuss the attacks and corresponding countermeasures that we implemented, with analysis of their measured effectiveness and their real-world applicability. The closing sections will discuss our overall takeaways and insights from this work, the extent of its usefulness in the real world, and potential improvements and expansions.
+In the next section, we will briefly discuss of the background and general real-world relevance of DNS denial-of-service threats. After that, we will discuss the contents of this repository in detail and will provide instructions for properly configuring and the components or our setup. From there, we list and analyze the results of each of our experimental trials. The closing sections will discuss our overall takeaways and insights from this work, the extent of its usefulness in the real world, and potential improvements and expansions.
 
 
 ## Table of Contents
@@ -79,7 +79,7 @@ The most common DNS-based attacks have typically revolved around issues with dat
 
 Denial of Service attacks take a much different approach. Instead of trying to do any sort of clever sleight-of-hand, they go full brute-force and try to overwhelm the server infrastructure until it becomes unusable. It's harder to execute when attackers have few resources, but also harder to counteract when they have many. Extensions to the protocol can do relatively little to help with limitations in hardware capacity, and if anything could make things marginally worse since they increase packet size and processing overhead.
 
-Articles published as recently as [this year](https://www.csoonline.com/article/646765/sophisticated-http-and-dns-ddos-attacks-on-the-rise.html) highlight denial of service, particularly distributed denial of service (DDoS) as a growing problem in general, with the latest wave of attackers starting to use cloud computing in their botnets to greatly expand their offensive capabilities. DDoS targeted directly towards web (HTTP/S) servers is perhaps the type most commonly thought of, but, according to CloudFlare's latest [DDoS threat report](https://blog.cloudflare.com/ddos-threat-report-2023-q3/), DNS is the most common attack vector among the remainder, with DNS Floods making up around 47% of recorded network-layer (i.e., excluding application-layer HTTP-based attacks) DDoS attacks in Q3 of 2023.
+Articles published as recently as [this year](https://www.csoonline.com/article/646765/sophisticated-http-and-dns-ddos-attacks-on-the-rise.html) highlight denial of service, particularly distributed denial of service (DDoS) as a growing problem in general, with the latest wave of attackers starting to use cloud computing in their botnets to greatly expand their offensive capabilities. DDoS targeted directly towards web (HTTP/S) servers is perhaps the type most commonly thought of, but, according to CloudFlare's latest quarterly [DDoS threat report](https://blog.cloudflare.com/ddos-threat-report-2023-q3/), DNS is the most common attack vector among the remainder, with DNS Floods making up around 47% of recorded network-layer (i.e., excluding application-layer HTTP-based attacks) DDoS attacks in Q3 of 2023.
 
 ![](https://blog.cloudflare.com/content/images/2023/10/pasted-image-0--19-.png)
 
@@ -202,7 +202,9 @@ If the server setup is changed, the scripts only need to be changed if a differe
 
 #### Data Collection
 
-The `evaluation` directory contains a Python script called `serverEval.py` that we use for generating our measurement data. It tries to gauge the performance and availability of our DNS server from the perspective of normal users by sending queries for our domain at controlled intervals and seeing how long it takes to get a response for each one, if the server responds at all.
+The intended effect of denial of service is, of course, to prevent or hamper people from accessing certain services. As such, the key metric we try to gauge is the performance and availability of our DNS server from the perspective of normal users.
+
+The `evaluation` directory contains a Python script called `serverEval.py` that we use for generating our measurement data. It works by sending DNS queries for our domain at controlled intervals and seeing how long it takes to get a response for each one, if the server responds at all.
 
 For simplicity and reliability in detecting responses, each query is done by calling the `dig` utility, as opposed to directly opening a new socket. By default, `dig` will time out after 15 seconds, a setting we left in place since it seemed like a reasonable threshold. Multithreading is used so that a new request can be sent before the previous ones receive responses, for a more realistic simulation of user traffic.
 
@@ -220,12 +222,12 @@ Running the script is about as simple as one would expect: `python3 serverEval.p
 
 After a response is received for the last request, the program will terminate and give a printout of the results in JSON as an array of objects, each with the following properties:
 
-- "index" (number) - Just the index of the given request, starting from 0. Redundant but helps with readability
-- "resolver" (string) - The IP address of the DNS resolver that the request was initial sent to
-- "start_time" (number) - The time at which the request was sent, relative to the start of the evaluation, given in milliseconds
-- "end_time" (number) - The time at which the response was received, relative to the start of the evaluation, given in milliseconds
-- "response_time" (number) - Equal to start_time - end_time, is redundant but helps with readability
-- "success" (boolean) - True if an actual response was received, false if `dig` timed out
+- **"index"** (number) - Just the index of the given request, starting from 0. Redundant but helps with readability
+- **"resolver"** (string) - The IP address of the DNS resolver that the request was initial sent to
+- **"start_time"** (number) - The time at which the request was sent, relative to the start of the evaluation, given in milliseconds
+- **"end_time"** (number) - The time at which the response was received, relative to the start of the evaluation, given in milliseconds
+- **"response_time"** (number) - Equal to start_time - end_time, is redundant but helps with readability
+- **"success"** (boolean) - True if an actual response was received, false if `dig` timed out
 
 The JSON files in the `results` directory all contain data generated in this format.
 
