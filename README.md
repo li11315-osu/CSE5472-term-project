@@ -36,9 +36,9 @@ This repository contains the code artifacts, documentation, and instructions nee
 
     - Programs to process and visualize the raw measurements
 
-We tried to make the code as modular and interchangeable as possible to make this work extensible. All that is necessary for the attack and evaluation programs to run is for the DNS server and web server to be running and to be accessible through the chosen domain name using public internet-based DNS resolution. Granted, the registered domain name and static IP needed for consistent internet accessibility both involve small monthly fees, though we considered that to be worth it for the improved convenience and realisticness.
+We tried to make the code as modular and interchangeable as possible to make this work extensible. All that is necessary for the attack and evaluation programs to work is for the DNS server to be running on any networked host and to be accessible through the chosen domain name using public internet-based DNS resolution. Granted, the registered domain name and static IP needed for consistent internet accessibility both involve small monthly fees, though we considered that to be worth it for the improved convenience and realisticness.
 
-In the next section, we will briefly discuss of the background and general real-world relevance of DNS denial-of-service threats. After that, we will discuss the contents of this repository in detail and will provide instructions for properly configuring and the components or our setup. From there, we list and analyze the results of each of our experimental trials. The closing sections will discuss our overall takeaways and insights from this work, the extent of its usefulness in the real world, and potential improvements and expansions.
+In the next section, we will briefly discuss of the background and general real-world relevance of DNS denial-of-service threats. After that, we will discuss the contents of this repository in detail and will provide instructions for properly configuring and the components or our setup. From there, we list and analyze the methodology and results of each of our experimental trials. The closing sections will discuss our overall takeaways and insights from this work, the extent of its usefulness in the real world, and potential improvements and expansions.
 
 
 ## Table of Contents
@@ -144,20 +144,26 @@ Since changes to the public DNS registry take time to propogate, we can't just k
 
 We decided that our best option for getting one of those was through a VPN, since it would also allow us to share the IP address by sharing the account. We went with **[PureVPN](purevpn.com)** since they allow port forwarding, which is what allows incoming traffic to actually interact with things running on the IP address. A one-year subscription with the Dedicated IP add-on costs about $100.
 
-Enabling port forwarding on the static IP is fairly easy. PureVPN has a settings panel that lets us just list the ports we want to enable, and all we had to do was type in "53, 80" (53 for DNS, 80 for web). From there, if you run PureVPN with the Dedicated IP connection then anything listening on those ports will be accessible at the address. Hooking the address up to the domain registrar was a bit more complicated.
+Enabling port forwarding on the static IP is fairly easy. PureVPN has a settings panel that lets us just list the ports we want to enable, and all we had to do was type in "53, 80" (53 for DNS, 80 for web). 
 
-On the Domain.com control panel, the Private Nameservers tab in the DNS & Nameservers subpanel lets us register DNS servers that point to IP addresses that we specify. We listed `ns1.dummy-site-for-dns-ddos-testing.com` and `ns2.dummy-site-for-dns-ddos-testing.com` as both pointing to our static IP. The `ns2` may or may not have been needed, but we included it there just in case, since some registrars require redundant nameservers. 
+From there, if you run PureVPN with the Dedicated IP connection then anything listening on those ports will be accessible at the address. 
+
+TODO: Add PureVPN screenshot
+
+One will need to connect to the Dedicated IP when running the DNS server in order for the attacks and evaluation to work. 
+
+As for hooking the address up to the domain registrar: on the Domain.com control panel, the Private Nameservers tab in the DNS & Nameservers subpanel lets us register DNS servers that point to IP addresses that we specify. We listed `ns1.dummy-site-for-dns-ddos-testing.com` and `ns2.dummy-site-for-dns-ddos-testing.com` as both pointing to our static IP. The `ns2` may or may not have been needed, but we included it there just in case, since some registrars require redundant nameservers. 
 
 There's a switch that allows us use the private nameservers as our site's main nameservers, so that resolvers will be directed to them. When we tried flipping it, though, it kept telling us that our nameservers were invalid. We tried again after actually running a DNS server instance on the static IP, but it still gave us the same error. Some time later, we ended up getting it to work after going on the main Nameservers tab, clicking the Add Nameserver button, and listing the `ns1` and `ns2` domains. This is what it looked like in the end:
 
 ![](https://cdn.discordapp.com/attachments/1019067030663598080/1173449843746803732/image.png?ex=6563ff54&is=65518a54&hm=b877b435b274b236c5c54632ca6ab757ea81ae99c0add90f077bbcab82f70079&)
 ![](https://cdn.discordapp.com/attachments/1019067030663598080/1173449946192674896/image.png?ex=6563ff6c&is=65518a6c&hm=d150cd60fd0afc4fea7c7ab157afa4b73fc3beb95226c4481663da596345236e&)
 
+This part only needs to be done once for a given domain name and static IP.
+
 ### Running the Servers
 
-The server scripts and configurations are generally intended to work for Linux.
-
-We used a Ubuntu VM for the servers and had PureVPN running inside the VM, which had the added benefit of allowing attack and evaluation traffic from outside the VM to behave like it was coming from a different network even if everything was running on the physical same device.
+The server scripts and configurations are generally intended to work for Linux. We used a Ubuntu VM in our own testing.
 
 The `defense` directory contains everything needed for running both the servers and the countermeasures. We'll get to the latter later.
 
@@ -192,11 +198,11 @@ The `attack` directory contains the two variants we implemented, both as Python 
 
 - `launderingFlood.py` sends queries to public DNS resolvers instead of directly contacting the authoritative nameservers, cycling through [a list](#https://github.com/trickest/resolvers/blob/main/resolvers.txt) of 30,000 that we found online and downloaded into the directory. To get around caching, it generates a random subdomain for each set of requests to ensure that each resolver has a cache miss.
 
-Either of these can be run by simply typing `python3 <filename>` into the terminal while the DNS server is running and is connected to the static IP. They won't terminate on their own, and will need to be stopped by pressing Ctrl+C. The final terminal printout for both will show the number and rate of packets sent, to help add context to other measurements.
+Either of these can be run by simply typing `python3 <filename>` into the terminal while the DNS server is running somewhere and is connected to the static IP. The attacks won't terminate on their own, and will need to be stopped by pressing Ctrl+C. The final terminal printout for both will show the number and rate of packets sent, to help add context to other measurements.
 
 We caution that, given the deliberate lack of constraints on the rate at which packets are being sent, both of these scripts will generate a very large volume of network traffic, likely reaching several hundred MB within seconds. **These attacks should only be launched while both the attacking host and the server host are connected to personal networks or hotspots. Don't get yourself blacklisted or arrested for doing this to a public or organizational network.** If you go for the hotspot option, make sure you have an unlimited plan with your cellular provider so that this doesn't take up all your data.
 
-If the server setup is changed, the scripts only need to be changed if a different domain name is being used or, in the case of the direct flood, if different nameserver subdomains are being used.
+If the server setup is changed, the scripts only need to be changed if a different domain name is being used, or, in the case of the direct flood, if different nameserver subdomains are being used.
 
 ### Running the Evaluation
 
@@ -218,7 +224,7 @@ Factors that can be adjusted in the code include:
 - The number of requests to make before terminating
 - The command-line arguments being given to `dig`.
 
-Running the script is about as simple as one would expect: `python3 serverEval.py`. The DNS server will need to be running and will need to be connected to the static IP in order for this to work properly, of course.
+Running the script is about as simple as one would expect: `python3 serverEval.py`. The DNS server will need to be running somewhere and will need to be connected to the static IP in order for this to work properly, of course.
 
 After a response is received for the last request, the program will terminate and give a printout of the results in JSON as an array of objects, each with the following properties:
 
@@ -235,7 +241,17 @@ Eyeballing the JSON can be somewhat helpful - at the very least, one can tell th
 
 #### Analysis and Visualization
 
+After getting the measurement data into a JSON file, entering `python3 dataVisualization.py --file=<file path> --desc=<optional description>` into the terminal from the `evaluation` directory will display a range bar chart showing the start and stop times of each requests, with successful requests shaded green while timeouts are shaded red. This was intended to resemble the network waterfall charts present in Chrome and Firefox's dev tools panels, with the inclusion of start times adding context and making it easier to put the lengths of response times from different trials into perspective. If a description is given, it will be displayed next to the chart title in parentheses.
+
+The request success rate and the average response time for successful requests, arguably the two most informative numbers we have for determining overall service availability, are listed in the corner of the chart. If the text overlaps with the bars or with the chart border, the chart window can be expanded to separate them.
+
+Information about which resolvers were used for which requests wasn't included since there didn't seem to be a good way to show it without cluttering the charts, and we figured that ideally it shouldn't significantly affect the results much anyway.
+
+The charts we use for showing the results of our own trials later in this README were generated using this program. One can reproduce them by running it on the provided data files, or modify the chart appearance or include additional charts by modifying the provided code.
+
 ### Running the Countermeasures
+
+TODO: Implement and document countermeasures
 
 
 ## Trials and Measurements
@@ -244,22 +260,35 @@ Eyeballing the JSON can be somewhat helpful - at the very least, one can tell th
 
 We ran our first tests right after writing the attacks, with no countermeasures in place. Everything was done on Thomas's laptop, with the server and VPN running inside a Ubuntu VM while the attack and evaluation scripts were running outside of it (yes, attack and evaluation traffic were coming from the same host here, something we changed on later trials). The device was connected to this internet through a cellular hotspot.
 
-The baseline measurements for the server implementations, with no attacks running, are shown below:
+The baseline measurements for the server implementations, with no attacks running, are shown below. The evaluation script was configured to send a request every 100ms and to cycle through the resolver list 3 times, for a total of 90 requests.
 
-TODO: Generate charts
+![](https://cdn.discordapp.com/attachments/1019067030663598080/1175613500849147954/image.png?ex=656bde64&is=65596964&hm=681c4745b41806fecd17ef490ac0f1fbd2e2e9869af55d508539c84e74f91fbb&)
+![](https://cdn.discordapp.com/attachments/1019067030663598080/1175612271905484880/image.png?ex=656bdd3f&is=6559683f&hm=43c17cde645433ec11062d98d6260b8e1f73f8552440d20cc454a3ea0df46f04&)
+
+We can see that both servers work, with not much of a significant difference between the two. The one failed request on the Python server was probably just a random fluke caused by underlying network conditions since the other two requests on the same resolver went through.
 
 Next, we ran the direct flood on both implementations, waiting about 10 seconds between the start of the attack and the start of the evaluation. In both cases, the attack sent out around 80K packets per second. Its effects can be seen below:
 
-TODO: Generate charts
+![](https://cdn.discordapp.com/attachments/1019067030663598080/1175612919673782333/image.png?ex=656bddd9&is=655968d9&hm=6e83ddd8bf7f430d157c42c5b2647f4499747db76b7c894aeb23dba3cb513efc&)
+![](https://cdn.discordapp.com/attachments/1019067030663598080/1175612507059126353/image.png?ex=656bdd77&is=65596877&hm=2197e6cd3c87a5f80cc566b122fce319399b2ad86b464e97646f26eb0c45e747&)
+
+In both cases, the attacks significantly hamper access to the server without completely cutting it off. The BIND server performs somewhat better, as one would expect from industrial-quality software compared to an amateur Python script, though it's not that big of a difference.
 
 Next we ran the DNS laundering attacks in the same manner. About 45K packets per second were sent out in both cases.
 
-TODO: Generate charts
+![](https://cdn.discordapp.com/attachments/1019067030663598080/1175614207408996352/image.png?ex=656bdf0c&is=65596a0c&hm=a0d8752b6a7ef11198023464b82d1da054056a93450f4cb0d342236044c2d1c7&)
+![](https://cdn.discordapp.com/attachments/1019067030663598080/1175614862915805307/image.png?ex=656bdfa9&is=65596aa9&hm=f5aa2f4b6ae6dea97ff99af414e14412a5acd07fe1c0677604e2be8ed3f21953&)
+
+This was somewhat surprising. Even though the initial traffic volume was much smaller, this attack was able to completely disable both servers. The two possible explanations we thought of were that the resolvers could be putting additional overhead on our servers by sending multiple packets for each query (which still doesn't seem like it could have that much of an effect), or that the resolvers were rate-limiting the evaluation traffic since it was coming from the same source as the attack traffic (though 45K requests per second on 30K resolvers means each one was barely being queried more than once a second anyway). We'd have to do more trials to find out.
 
 As a sanity check, we ran one more set of tests with the DNS laundering, in which we started the evaluation first and then started the attacks about a second later.
 
-TODO: Generate charts
+![](https://cdn.discordapp.com/attachments/1019067030663598080/1175615731283525724/image.png?ex=656be078&is=65596b78&hm=12b2664876e036821415d5ef9bceed1a5f620a69169cdbaa91591e44c48b8d45&)
+![](https://cdn.discordapp.com/attachments/1019067030663598080/1175615453171810455/image.png?ex=656be035&is=65596b35&hm=4422c5382546495218a400c0739c6d84c997fcdabe127ba152e38c9553a564a0&)
 
+As we can see in both cases, there's an almost-instant transition from normal operation to complete denial of service.
+
+TODO: More trials, with countermeasures
 
 ## Conclusions
 
