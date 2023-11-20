@@ -1,7 +1,45 @@
-// Add authoritative zone for our domain
-zone "dummy-site-for-dns-ddos-testing.com" {
-	type primary;
-	file "/etc/bind/zonefile";
-	notify yes;
+options {
+    // Existing configuration options...
+
+    // Rate limiter implementation: accept 5 responses every 5 seconds
+    rate-limit {
+        responses-per-second 5;
+        window-size 5;
+    };
+
+    // Logging Configuration
+    logging {
+        channel default_log {
+            file "/var/log/named/default.log" versions 3 size 5m;
+            severity dynamic;
+            print-time yes;
+        };
+
+        channel rate_limit_log {
+            file "/var/log/named/rate_limit.log" versions 3 size 5m;
+            severity info;
+            print-time yes;
+        };
+
+        category default { default_log; };
+        category rate-limit { rate_limit_log; };
+    };
 };
 
+// Add authoritative zone for our domain with logging
+zone "dummy-site-for-dns-ddos-testing.com" {
+    type primary;
+    file "/etc/bind/zonefile";
+    notify yes;
+
+    // Logging Configuration for the specific zone
+    logging {
+        channel dummy_site_log {
+            file "/var/log/named/dummy_site.log" versions 3 size 5m;
+            severity info;
+            print-time yes;
+        };
+
+        category dummy-site-for-dns-ddos-testing.com { dummy_site_log; };
+    };
+};
