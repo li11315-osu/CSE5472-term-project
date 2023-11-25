@@ -1,0 +1,8 @@
+Setup:
+- All programs running in Thomas's laptop, connected to the internet through his phone's cellular hotspot
+- DNS server running inside Ubuntu VM, connected to PureVPN with static IP
+- DNS caching disabled for simplicity
+- Evaluation running in another VM with another PureVPN connection.
+- Attacks running outside of VM on macOS host
+- For most of the attack measurements, the evaluation program was started about 5 seconds after the attack was started
+- Evaluation queries involved list of 30 trusted resolvers, cycled through three times with 100ms between queries

@@ -5,8 +5,12 @@
 # Currently, it sends requests at a constant rate and cycles through the
 # list of resolvers in order to keep it relatively deterministic
 
+# Use the --file option to store the results as JSON in the specified file path
+# otherwise the JSON gets printed to the console
+
 import subprocess
 import threading
+import argparse
 import time
 import json
 
@@ -75,7 +79,7 @@ def get_resolver(index : int):
 # Continue until reaching specified number of queries
 # Wait all queries to either finish or timeout
 # Report the current state of the results object and terminate
-def main():
+def main(args):
     threads = [None] * num_requests
 
     for index in range(num_requests):
@@ -91,7 +95,17 @@ def main():
 
     print()
     print(get_timestamp_str() + " All queries finished, test concluded")
-    print("Final results for each request (as JSON): ")
-    print(json.dumps(results, indent=4))
+    if args.file is None:
+        print("Final results for each request (as JSON): ")
+        print(json.dumps(results, indent=4))
+        print("To save results directly to a file, use the --file argument")
+    else:
+        json.dump(results, open(args.file, 'w'))
+        print("Results saved to " + args.file)
 
-main()
+# Handle command line arguments
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--file', default=None, type=str)
+    args = parser.parse_args()
+    main(args)

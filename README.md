@@ -14,10 +14,9 @@ This repository contains the code artifacts, documentation, and instructions nee
 
 - **Defense**
 
-    - The code and configuration information needed for self-hosting an authoritative DNS server, which we made internet-accessible through the registration of a domain name and a static IP address in order to fully reflect the behavior of regular real-world nameservers. The external setup steps do not involve any of our own code artifacts, but instructions are included in this README to allow their replication. We used three different DNS server implementations in order to maximize our flexibility in implementing countermeasures and also examine differences in behavior and natural defensive capabilities:
+    - The code and configuration information needed for self-hosting an authoritative DNS server, which we made internet-accessible through the registration of a domain name and a static IP address in order to fully reflect the behavior of regular real-world nameservers. The external setup steps do not involve any of our own code artifacts, but instructions are included in this README to allow their replication. We used two different DNS server implementations in order to maximize our flexibility in implementing countermeasures and also examine differences in behavior and natural defensive capabilities:
 
         - A manual implementation consisting of a Python program that listens on port 53 and responds to DNS packets
-        - [dnsmasq](https://thekelleys.org.uk/dnsmasq/doc.html), a simple, lightweight DNS server software designed for small networks
         - [BIND](https://www.isc.org/bind/), the most commonly used DNS server software in real-world systems
 
     - A one-line script to self-host a web server for which our DNS server resolves the domain name into the corresponding IP address. When both servers are running, any internet user can access our dummy website by looking up the domain name, representing arguably the most simple and common use case for DNS. This is only included for illustrative purposes and to help verify that our DNS server works.
@@ -65,7 +64,7 @@ In the next section, we will briefly discuss of the background and general real-
 
 ### Domain Name System (DNS)
 
-Three decades into the Information Age, the Internet is so widely available, works so seamlessly, and is so embedded into daily life that it's easy for most people to take it for granted. British science fiction writer Arthur C. Clarke stated in 1962 that "any sufficiently advanced technology is indistinguishable from magic", widely quoted words that now often feel prescient for many real-world technologies, and which may come to mind whenever one does try to think about how the Internet came to be so ubiquitous. In this case, the technology behind the magic consists of a vast network of physical and digital infrastructure in which each connected entity implements a set of standardized protocols that allow it to exchange information with the others in a consistently comprehensible manner. 
+Three decades into the Information Age, the Internet is so widely available, works so seamlessly, and is so embedded into daily life that it's easy for most people to take it for granted. British science fiction writer Arthur C. Clarke stated in 1962 that "any sufficiently advanced technology is indistinguishable from magic" - widely quoted words that now often feel prescient for many real-world technologies, and which may come to mind whenever one does try to think about how the Internet came to be so ubiquitous. In this case, the technology behind the magic consists of a vast network of physical and digital infrastructure in which each connected entity implements a set of standardized protocols that allow it to exchange information with the others in a consistently comprehensible manner. 
 
 Much of the heavy lifting is handled by the [Internet Protocol (IP)](https://en.wikipedia.org/wiki/Internet_Protocol), which handles the process of routing data packets across interconnected networks to allow end-to-end communication between any two devices with valid **IP addresses**. IP addresses are numeric and fixed-length, and can be subdivided such that the prefix identifies the network while the suffix identifies the specific device, making it fairly easy to do routing with them. When it comes to allowing human users to specify what they want to contact, though, these numbers can be difficult to memorize, especially as shorter IPv4 addresses get used up and are superseded by longer IPv6 addresses, and as Internet resources may often change servers or be hosted across multiple servers.
 
@@ -224,7 +223,7 @@ Factors that can be adjusted in the code include:
 - The number of requests to make before terminating
 - The command-line arguments being given to `dig`.
 
-Running the script is about as simple as one would expect: `python3 serverEval.py`. The DNS server will need to be running somewhere and will need to be connected to the static IP in order for this to work properly, of course.
+Running the script is about as simple as one would expect: `python3 serverEval.py`. To save the results directly to a file instead of printing to the console, the optional `--file=<file path>` argument can be added at the end. The DNS server will need to be running somewhere and will need to be connected to the static IP in order for this to work properly, of course.
 
 After a response is received for the last request, the program will terminate and give a printout of the results in JSON as an array of objects, each with the following properties:
 
@@ -279,7 +278,9 @@ Next we ran the DNS laundering attacks in the same manner. About 45K packets per
 ![](https://cdn.discordapp.com/attachments/1019067030663598080/1175614207408996352/image.png?ex=656bdf0c&is=65596a0c&hm=a0d8752b6a7ef11198023464b82d1da054056a93450f4cb0d342236044c2d1c7&)
 ![](https://cdn.discordapp.com/attachments/1019067030663598080/1175614862915805307/image.png?ex=656bdfa9&is=65596aa9&hm=f5aa2f4b6ae6dea97ff99af414e14412a5acd07fe1c0677604e2be8ed3f21953&)
 
-This was somewhat surprising. Even though the initial traffic volume was much smaller, this attack was able to completely disable both servers. The two possible explanations we thought of were that the resolvers could be putting additional overhead on our servers by sending multiple packets for each query (which still doesn't seem like it could have that much of an effect), or that the resolvers were rate-limiting the evaluation traffic since it was coming from the same source as the attack traffic (though 45K requests per second on 30K resolvers means each one was barely being queried more than once a second anyway). We'd have to do more trials to find out.
+This was somewhat surprising. Even though the initial traffic volume was much smaller, this attack was able to completely disable both servers. 
+
+The two possible explanations we thought of were that the resolvers could be putting additional overhead on our servers by sending multiple packets for each query (which still doesn't seem like it could have that much of an effect), or that the resolvers were rate-limiting the evaluation traffic since it was coming from the same source as the attack traffic (though 45K requests per second on 30K resolvers means each one was barely being queried more than once a second anyway). We'd have to do more trials to find out.
 
 As a sanity check, we ran one more set of tests with the DNS laundering, in which we started the evaluation first and then started the attacks about a second later.
 
@@ -310,7 +311,6 @@ TODO: More trials, with countermeasures
 - Imperva: [DNS Flood of 1.5 Billion Requests a Minute, Fueled by DDoS Protection Services](https://www.imperva.com/blog/massive-dns-ddos-flood/)
 - [Domain.com](domain.com)
 - [PureVPN](purevpn.com)
-- [dnsmasq](https://thekelleys.org.uk/dnsmasq/doc.html)
 - [BIND](https://www.isc.org/bind/)
 - [Trickest's list of trusted public DNS resolvers](https://github.com/trickest/resolvers/blob/main/resolvers-trusted.txt)
 - [Trickest's full list of public DNS resolvers](https://github.com/trickest/resolvers/blob/main/resolvers.txt)
