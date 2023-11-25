@@ -2,7 +2,16 @@ Setup:
 - All programs running in Thomas's laptop, connected to the internet through his phone's cellular hotspot
 - DNS server running inside Ubuntu VM, connected to PureVPN with static IP
 - DNS caching disabled for simplicity
-- Evaluation running in another VM with another PureVPN connection.
 - Attacks running outside of VM on macOS host
+- Evaluation running outside of VM on macOS host
 - For most of the attack measurements, the evaluation program was started about 5 seconds after the attack was started
 - Evaluation queries involved list of 30 trusted resolvers, cycled through three times with 100ms between queries
+- The slowed-down version of the laundering attack involved a slight modification to the code to generate a new subdomain before each request rather than before each cycle
+
+Additional Results:
+- Attack volume for direct flood averaged out to 82K packets per second for trial with no countermeasures and 84K per second for the trial with rate limiting
+- Attack volume for laundering attack averaged out to 47K packets per second for trial with no countermeasures and 46K per second for the trial with rate limiting
+- Attack volume for the slowed-down version of the laundering attack averaged out to 16K packets per second
+
+Caveats:
+- Again, the attack and evaluation are coming from the same OS, and everything is coming out of and back into the same device's network interfaces. I'm suspecting that this is messing with the results a lot, because it's pretty surprising that rate limiting would have close to no effect on the direct flood.
