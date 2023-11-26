@@ -3,10 +3,10 @@ options {
     directory "/var/cache/bind";
 
     // Rate limiter implementation: accept 5 responses every 5 seconds
-    rate-limit {
-        responses-per-second 5;
-        window 5;
-    };
+    //rate-limit {
+    //    responses-per-second 5;
+    //    window 5;
+    //};
 
     // Logging Configuration
     //logging {
