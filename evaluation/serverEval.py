@@ -22,8 +22,8 @@ resolvers = open("resolvers-trusted.txt", 'r').read().splitlines()
 # Original source of resolver list: https://github.com/trickest/resolvers/blob/main/resolvers-trusted.txt
 # IPs excluded: 159.89.120.99, 89.233.43.71, 91.239.100.100 (consistently don't respond), 77.88.8.8, 77.88.8.1 (Yandex - don't want to send traffic to Russia)
 
-num_requests = len(resolvers) * 3
-interval = 100 # In milliseconds
+num_requests = len(resolvers)
+interval = 250 # In milliseconds
 
 # Test results, indexed by corresponding request number
 # Fields that will be recorded:

@@ -1,0 +1,1 @@
+Same basic setup as the 11/24 trial. I just ran another set of tests so that I can take note of the network monitor. Screenshots of that are included in the README.
