@@ -1,0 +1,7 @@
+Setup:
+- DNS server running inside Ubuntu VM on Thomas's laptop, connected to PureVPN
+- Attacks running from Benjamin's laptop
+- Evaluation running from Thomas's laptop outside of VM
+- Caching disabled unless stated, TTL set to 30 for trials with caching
+- Evaluation queries involved list of 30 trusted resolvers, cycled through once with one request per 250ms
+- Rate-limiting config: 5 per second, 5-second window

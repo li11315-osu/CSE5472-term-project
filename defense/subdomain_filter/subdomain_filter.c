@@ -69,8 +69,8 @@ static unsigned int subdomain_filter_hook_func(
 
 	/* Calculate pointers for begin and end of DNS packet data */
 	/* Skip past DNS header and go to question section */
-	/* user_data = (unsigned char *)((unsigned char *) udph + UDP_HEADER_LEN + DNS_HEADER_LEN);
-	tail = skb_tail_pointer(skb); */
+	user_data = (unsigned char *)((unsigned char *) udph + UDP_HEADER_LEN + DNS_HEADER_LEN);
+	tail = skb_tail_pointer(skb);
 
 	/* Debug printouts */
 
