@@ -54,9 +54,14 @@ In the next section, we will briefly discuss of the background and general real-
         1. [Data Collection](#data-collection)
         2. [Analysis and Visualization](#analysis-and-visualization)
     5. [Running the Countermeasures](#running-the-countermeasures)
+        1. [Rate-Limtiing](#rate-limiting)
+        2. [Subdomain Filter](#subdomain-filter)
 3. [Trials and Measurements](#trials-and-measurements)
     1. [11/06/2023](#11062023)
+    4. [11/26/2023](#11262023)
 4. [Conclusions](#conclusions)
+    1. [Lessons Learned](#lessons-learned)
+    2. [Unanswered Questions and Future Work](#unanswered-questions-and-future-work)
 5. [References](#references)
 
 
@@ -147,7 +152,7 @@ Enabling port forwarding on the static IP is fairly easy. PureVPN has a settings
 
 From there, if you run PureVPN with the Dedicated IP connection then anything listening on those ports will be accessible at the address. 
 
-TODO: Add PureVPN screenshot
+![](https://cdn.discordapp.com/attachments/1019067030663598080/1179195162702905394/image.png?ex=6578e613&is=65667113&hm=9f61b56c52182f1645707101d0111b6f6bf5cb98ccd5688113954d26d52d0745&)
 
 One will need to connect to the Dedicated IP when running the DNS server in order for the attacks and evaluation to work. 
 
@@ -250,14 +255,34 @@ The charts we use for showing the results of our own trials later in this README
 
 ### Running the Countermeasures
 
-TODO: Implement and document countermeasures
+Implementations for countermeasures are located back in the `defense` directory, and are currently designed to operated on the same host as the server. We have two, with one intended for each attack.
+
+#### Rate-Limiting
+
+For the Direct Flood, we found that BIND has a built-in feature that lets us limit the number of requests from the same client that the server will process in a given window.
+
+The `named.conf.options` file in the `bindConfig` subdirectory contains a few commented-out lines specifying the rate-limiting configuration. To enable rate-limiting, uncomment them and rerun the BIND server.
+
+![](https://cdn.discordapp.com/attachments/1019067030663598080/1179553460899811378/image.png?ex=657a33c4&is=6567bec4&hm=2bc1e4e5eb7324ccb9b5fe9dc7ed62f15db8c8ff7e2b4594cb055b70e7234aac&)
+
+The limit can be made stricter or looser by adjusting these numbers. To disable rate-limiting, comment the lines out again and rerun the server again.
+
+Given that BIND already has it, we didn't bother reimplementing it in the Python server since people in the real world would just use BIND. Later trials only test the BIND server since there turned out to be no upside to using the Python server.
+
+#### Subdomain Filter
+
+For the Laundering Attack, we figured that we could take advantage of the need for randomly-generated subdomains to implement a packet filter that drops requests to any subdomains that aren't provided by the server.
+
+Our implementation is done using Linux's [netfilter](https://www.netfilter.org/) framework, which lets us use hooks in the kernel to register callbacks that inspect incoming packets and can choose to drop or accept them before they reach the user applications. The code and the makefile are present in the `subdomain_filter` subdirectory where one can modify them.
+
+Back at the top level of the `defense` directory, entering `./runSubdomainFilter.sh` will handle the whole process of compiling the code and inserting it into the kernel, enabling the filter. To disable the filter, enter `./stopSubdomainFilter.sh`, which will remove the code from the kernel and also clean up the compiled artifacts. The server doesn't need to be rerun since the filter runs separately from it.
 
 
 ## Trials and Measurements
 
 ### 11/06/2023
 
-We ran our first tests right after writing the attacks, with no countermeasures in place. Everything was done on Thomas's laptop, with the server and VPN running inside a Ubuntu VM while the attack and evaluation scripts were running outside of it (yes, attack and evaluation traffic were coming from the same host here, something we changed on later trials). The device was connected to this internet through a cellular hotspot.
+We ran our first tests right after writing the attacks, with no countermeasures in place. Everything was done on Thomas's laptop, with the server and VPN running inside a Ubuntu VM while the attack and evaluation scripts were running outside of it (yes, attack and evaluation traffic were coming from the same host here, something we changed for the final trial). The device was connected to this internet through a cellular hotspot.
 
 The baseline measurements for the server implementations, with no attacks running, are shown below. The evaluation script was configured to send a request every 100ms and to cycle through the resolver list 3 times, for a total of 90 requests.
 
@@ -289,10 +314,125 @@ As a sanity check, we ran one more set of tests with the DNS laundering, in whic
 
 As we can see in both cases, there's an almost-instant transition from normal operation to complete denial of service.
 
-TODO: More trials, with countermeasures
+### 11/26/2023 
+
+Shortly after we managed to implement both countermeasures, we got the group together on a call to collect some more measurements, this time with proper separation of traffic sources.
+
+The attack traffic was running off of Benjamin's laptop, connected to a personal Wi-Fi network, while the defense setup (including the VPN connection) was running on Thomas's laptop inside a VM and the evaluation traffic was running outside of the VM, with the device connected to a cellular hotspot. We would've liked to separate the three components onto three separate devices, but Prashanth's internet connection dropped so we had to make do with two.
+
+The evaluation script was configured to cycle through the resolver list only once this time around, since we would be turning caching on later, for a total of 30 requests. The interval between requests was increased from 100ms to 250ms to offset the shortening.
+
+We focused on testing the BIND server since it was the only one with a rate-limiting implementation and since it was the option that most people in the real world would use. We basically only implemented the Python server in case we needed more control over the server code, and it turned out that we didn't. Still, though, we collected another set of results with it to get another reference point.
+
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178485080205824020/image.png?ex=657650c2&is=6563dbc2&hm=c7d1fc3f5560069638d1b29207517edb3e9e65e5c2f72eaba06642a57c151f3f&)
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178485614316896306/image.png?ex=65765141&is=6563dc41&hm=f4419ac2d83bc79a132fedfc540714d4d796d5ae79b9299c97110d7b7c4fdebe&)
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178485829308530778/image.png?ex=65765174&is=6563dc74&hm=254f8fda59e8efe0143590406af4a257223b98fdf8cdf90e434cb034037c4da0&)
+
+For the baseline and direct flood, this basically replicated the result of the first trial, but the measurements for the laundering attack already show a clear divergence. The evaluation traffic can actually get through this time, which seems to support the hypothesis that the resolvers were rate-limiting it the last time around, when it was coming from the same place as the attack traffic.
+
+Initial attack volume averaged out to around 100K packets per second for the direct flood and 180K per second for the laundering flood, numbers that remained within a consistent range for each subsequent trial. The fact that Benjamin's laptop would generate far more packets for the laundering flood than the direct flood, the opposite of what had been the case on Thomas's laptop, is interesting, though we're not sure what the cause would be.
+
+Next, we moved on to collecting measurements for the BIND server with no countermeasures. Starting from here, we also began taking screenshots of the network monitor on the server host showing the volume of traffic sent and received, which gives a picture of what's happening to the packets on the server-side. These are listed under the corresponding request timings chart.
+
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178486983593570334/image.png?ex=65765288&is=6563dd88&hm=22ebd76763cf0d933bcb75b9d87c8b832cf779040f4285441184d5e28533de88&)
+
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178486360470982726/image.png?ex=657651f3&is=6563dcf3&hm=4e454023e22cb3bd9dce5ec4a95cf626e1f11463bfd1324383412b6fe5934d05&)
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178466153413222480/image.png?ex=65763f21&is=6563ca21&hm=13d092f215c7bb653ef303092e7105f0303d46580634bd3a92eeb6cc97ec7245&)
+
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178486068828442664/image.png?ex=657651ae&is=6563dcae&hm=d9f2e3fda8eca878488f8293c3cfc1007b3421d877e47d0ab2ef48c23942adb1&)
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178466729312124949/image.png?ex=65763fab&is=6563caab&hm=2d77125929b912e19ed9d48666b7ab69df1f0999c7c329543e91c1aaf0bf47e8&)
+
+Again, there's not much of a significant difference between the two implementations, at least not one big enough to not be attributable to fluctuations in network conditions. In general, the precise numbers can be finicky, and it's better to focus on the wider trends.
+
+On the network monitor, we see the sent traffic approximately tracking with the received traffic, showing the baseline for what it looks like when the server attempts to respond to all of the packets it receives. With all of our attack sessions lasting between around 30 and 35 seconds, it's interesting to note how the traffic from the direct flood stops almost immediately while the traffic from the laundering attack keeps coming in, indicative of quirks in resolver behavior.
+
+Next, we turned rate-limiting on:
+
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178487408472363078/image.png?ex=657652ed&is=6563dded&hm=c9f873283d7476755a642af09ec3f4fd0dd106e9621dfd5eda4cd65933262ae0&)
+
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178487743660163082/image.png?ex=6576533d&is=6563de3d&hm=f4f2d63ce132eba53c12a3e3c3109584e6864d14c10d01d9be01a83e242a8abd&)
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178467634304532521/image.png?ex=65764082&is=6563cb82&hm=f19dd56d4a96de6b67608ba8c9504f526685ac0f09f8eadb7d13f485211c6eee&)
+
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178487968487448636/image.png?ex=65765372&is=6563de72&hm=9772604a093c6c693a2eab4b4f67030e413abcc19ff2aab470a9abdf86caabd1&)
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178468185008255088/image.png?ex=65764106&is=6563cc06&hm=7bc1d3dd04cb094e1d3bb4093d24669ec5180a1a500eac972701eed37a167065&)
+
+Before the tests, we had figured that the rate-limiting would probably mostly neutralize the direct flood since everything in this version was coming from a single host, while the laundering attack would probably become much more crippling since the attack traffic would crowd out any evaluation traffic that uses the same resolvers. Neither such thing happens. Server availability holds up slightly better under the direct flood, but it's not a big difference. The laundering attack also gets slightly better, surprisingly, though it could very well be attributable to network conditions.
+
+The network monitor screenshots are useful here in that they tell us that this isn't a case of us just forgetting to properly enable the countermeasure. With the direct flood, the sent traffic tracks to just over half of the received traffic now. Still, that's odd considering that we configured it to 5 packets per 5 seconds whereas the attack sent around 100,000 packets per second. Perhaps we still did something wrong, or perhaps the limits don't or can't get enforced that strictly beyond a certain point, or perhaps we misunderstood how the whole thing works.
+
+Overall, though, it's somewhat encouraging that there was a slight improvement at all under the attacks and that the legitimate traffic wasn't noticeably impeded. It's not exactly a technical contribution on our part, since this is already a built-in option, but at least we now know how to address one of the problems we created here.
+
+Next, we turned rate-limiting off and turned the subdomain filter on:
+
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178489131941253201/image.png?ex=65765488&is=6563df88&hm=96ad7182af369b17306bc22ee34a8cc56545cda88995245c0ae3c78a5b029153&)
+
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178488605124071544/image.png?ex=6576540a&is=6563df0a&hm=a14855553470dfa5a9612b93d3484fd45ced938d8e67c985381d6eac29d52ccd&)
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178477672163196928/image.png?ex=657649dc&is=6563d4dc&hm=a84cc3bfb0b2fa921f92f8e5059793697e55e9057bbc1b1b293ade39f5c72377&)
+
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178488349573513297/image.png?ex=657653cd&is=6563decd&hm=bc1dc3c2892faa826fbaeff4c11fd05e13394d56edb5b7a5b71f36a6dc43dd25&)
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178478178591846490/image.png?ex=65764a54&is=6563d554&hm=9796039f22a5370146b96c7cdc2a63179c431d7a2024d2b5f91118908b38eb78&)
+
+When writing the countermeasure, we knew that it would only work if the overhead of inspecting and dropping packets was lower than that of just letting the server respond as usual. Otherwise, the whole system would get overwhelmed just as easily. In practice, it got overwhelmed even more easily. Much more easily, in fact. We go from partial denial to near-full denial. These are almost comically bad results.
+
+The network monitor shows that most of the traffic is indeed getting filtered out before the server tries responding to it, but of course the goal of defending against denial of service is not to reduce server load but to ensure continued user access. All we did was create a new bottleneck. The only good news is that it at least didn't also mess up the no-attack case.
+
+In hindsight, we realized another clear flaw: if a resolver sends a packet and doesn't get a response, it doesn't have any way of knowing why or where the packet gets dropped, and it'd probably send another one. That's presumably why DNS timeouts seem so rare during our normal web browsing, even though DNS requests are transported over unreliable UDP packets. That would mean that this "countermeasure" is amplifying the attack it's supposed to be defending against. An affirmative "non-existent domain" response would let the resolver know not to try again, and perhaps we could've modified the code to send one, but we'd just be copying the normal server functionality at that point, and it's unlikely that any code we can write in the span of this project could run faster than software like BIND that's been getting improved and optimized for decades.
+
+We didn't generate the timing charts until after we had run all of the trials, so we didn't realize just how badly the subdomain filter had failed until later. As such, we went forward with another set of measurements in which we turned caching on (TTL of 30 seconds) to deal with an issue we noticed in which resolvers don't just query the specified subdomain but also send requests to the ns1 and ns2 subdomains, which are valid and don't get filtered. We figured that caching would make it so that they would only look those up once.
+
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178489399672061952/image.png?ex=657654c8&is=6563dfc8&hm=bc44ba526abb371f57b064a1c9db5e70d5013710f03a6aec85ac0e9b60ee8a17&)
+
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178489700382687383/image.png?ex=6576550f&is=6563e00f&hm=1aba492fb90ecb8d128f63b61da65f532d7ec7501bc57be7c6a637685fad31d6&)
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178480305816998031/image.png?ex=65764c50&is=6563d750&hm=8089d6e6cab0b1848835694dd482c00fc09855e4b0d26dd63d74fc41e1282656&)
+
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178490197109911624/image.png?ex=65765586&is=6563e086&hm=9a80ab0b886b71943d0fb8d9740d17b3fe1ac8960e9dd0009554e0a706fb35df&)
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178480866092134530/image.png?ex=65764cd5&is=6563d7d5&hm=805ad7b86a5394d29cf49c9311c4c06798e12723407e08f701c3680f3f562663&)
+
+Once again, the laundering attack obliterates the system, and it doesn't even seem like there's much of a different in the amount of traffic going through. That massive surge in received packets near the end, which was probably a fluke, makes the rest of the graph hard to read.
+
+What's surprising is that the direct flood has now gone back to only causing less than half of the legitimate requests to fail, even though there was nothing about the enablement of caching that would make it behave differently. We made sure to wait at least 30 seconds if not more between trials so that all existing cached answers for the evaluation resolvers would expire, and the respond times on the successful requests are too long to look like cache hits. 
+
+This could suggest that the 90% fail rate on the direct flood in the previous trial was a fluke, and that the subdomain filter only really consistently makes things worse when dealing with the laundering attack. That would make sense, since intentionally dropping a packet seems like a more complex and expensive operation than letting one through as normal.
+
+For the last set of trials, we turned the rate-limiting back on to test out defense in depth. Caching remained on.
+
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178491029318541404/image.png?ex=6576564c&is=6563e14c&hm=ee858c5fb1972034a22bb31302edc48806449de5abe9f873db131e2ea70f852d&)
+
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178490733150339202/image.png?ex=65765606&is=6563e106&hm=2d095fb1bf41639f3a5a6e1cf90419baeefa48a8d7824258af2278ddd7532c19&)
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178482611052626000/image.png?ex=65764e75&is=6563d975&hm=0a9f3de3e6c91cee5c821c78051a6f12fdffd9cd5d2eacda2ae0559c65d8e144&)
+
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178490509426171944/image.png?ex=657655d0&is=6563e0d0&hm=14aa6755d2f694c03a38b1e0dce1ce8f826be8a31bd80402bc0b28933f13e8d8&)
+![](https://cdn.discordapp.com/attachments/1144353133129125931/1178483186448220200/image.png?ex=65764efe&is=6563d9fe&hm=43da29ff2528afa86e4ebf69f16f91548b7cba62b99146bedae8e1fe09cf5c54&)
+
+We can see that the two defenses can work in conjunction to deflate traffic from both attacks without interfering with legitimate requests in the absence of attacks. But, of course, the caveat is that one of those defenses creates a bottleneck in its attempt to filter attack traffic, making the attack worse from the user's perspective, which is what actually matters. At least we have another data point showing that it's just the laundering attack and not the direct flood that triggers the bottleneck.
 
 ## Conclusions
 
+### Lessons Learned
+
+Denial of Service isn't exactly a novel problem, and at this point there's plenty of widely available protection options, either as part of cloud computing platforms like AWS or standalone services like those offered by Cloudflare. If one signs up for them, they typically won't have to worry about them being inadequate. The [largest DDoS attack](https://cloud.google.com/blog/products/identity-security/google-cloud-mitigated-largest-ddos-attack-peaking-above-398-million-rps) in history as of this writing was mitigated by Google Cloud in just two minutes. When face with the question of what our own technical contribution would be, we knew we could never beat the existing solutions in terms of general sophistication, so we wondered if we could go in the other direction and come up with simpler and easier-to-use solutions optimized for the specific case of protecting DNS servers, taking advantage of DNS's relative simplicity as a service.
+
+Indeed, the fact that the any single client is unlikely to query the same authoritative DNS server very frequently (given caching) means that servers can be fairly strict about rate-limiting, but that already seems to be widely known, given how BIND has it as a built-in option.
+
+When going beyond that and trying to implement defenses with our own custom code, we run into the fact that DNS's apparently simplicity is just an abstraction. It's still a protocol built on a stack of other protocols, with countless things going on under the hood that we barely understand. Most of the time, we don't have to worry about it, but it comes to bite us in cases like dealing with DoS, where every bit of overhead matters. The established players know the optimal ways to deal with large volumes of traffic, hence why the built-in rate-limiting did alright, but our "simple solution" takes a naive approach, and it completely falls apart once you put a bit of load on it.
+
+It's not even just a networking thing. When it comes to computing in general, something that runs fast when done once isn't always still going to seem fast if you have to do it over 100,000 times a second on a single host. A better solution would try to look at the big picture instead of just going through one packet at a time. With the amount of effort it would take to implement something like that, one would most likely be better off either buying protection or learning how to deploy one of the open source options.
+
+There's the moral of the story: that DoS protection is an area where you don't reinvent the wheel. By all means, you can try, but you won't get very far unless you really know what you're doing.
+
+### Unanswered Questions and Future Work
+
+It may seem like we hit a dead end, but the rate-limiting still worked somewhat and we still came out with this neat testing setup.
+
+If we were to keep working on this, the first order of business would probably be to run some more trials to determine the amount of variability we can expect in our measurements and get a clearer picture of what's actually going on. 
+
+It'd also be nice to have some way of seeing how much of the request slowdown is coming from the server being overloaded versus how much is coming from network bottlenecks or other environment-dependent noise. This would probably require more sophisticated instrumentation.
+
+For rate-limiting, we only tried one configuration, with 5 packets per 5 seconds, so there's still the question of how the system would perform under different settings, or if there are different or more effective ways of enforcing the limit.
+
+Getting some data on how existing solutions stack up under our measurement system could also be interesting, though it'd probably only be feasible to test the open-source options since sending DoS traffic to third-party services could carry risks.
+
+In that vein, we keep just saying "Denial of Service" or "DoS" instead of "DDoS" because the other D stands for "distributed", and we don't have any distribution. If one could get their hands on the right resources, though, then they could change that for their own trials. All it would take is having each distributed host run its own copy of the attack script. One could also try testing out a distributed version of the server setup by running multiple instances and listing each one on the domain registrar.
 
 ## References
 
@@ -314,4 +454,5 @@ TODO: More trials, with countermeasures
 - [BIND](https://www.isc.org/bind/)
 - [Trickest's list of trusted public DNS resolvers](https://github.com/trickest/resolvers/blob/main/resolvers-trusted.txt)
 - [Trickest's full list of public DNS resolvers](https://github.com/trickest/resolvers/blob/main/resolvers.txt)
-- Fortinet: [DDoS Attack Mitigation Technologies Demystified](https://www.fortinet.com/content/dam/fortinet/assets/white-papers/DDoS-Attack-Mitigation-Demystified.pdf)
+- [netfilter](https://www.netfilter.org/)
+- Google: [Google mitigated the largest DDoS attack to date, peaking above 398 million rps](https://cloud.google.com/blog/products/identity-security/google-cloud-mitigated-largest-ddos-attack-peaking-above-398-million-rps)
